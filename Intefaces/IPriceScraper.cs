@@ -1,4 +1,4 @@
-﻿using PriceTracker.DTOs.ProductRequest;
+﻿using PriceTracker.DTOs;
 
 namespace PriceTracker.Intefaces
 {
