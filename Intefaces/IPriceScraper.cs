@@ -4,6 +4,6 @@ namespace PriceTracker.Intefaces
 {
     public interface IPriceScraper
     {
-        Task<PriceAlertDto> ExtractPrice(string url);
+        Task<ProductTrackingResult> ExtractPrice(string url);
     }
 }
