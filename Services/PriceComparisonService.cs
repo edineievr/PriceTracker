@@ -40,7 +40,7 @@ namespace PriceTracker.Services
             {
                 if (historico.PriceChanged())
                 {
-                    var priceAlert = new PriceAlertDto
+                    var priceAlert = new ProductTrackingResult
                     {
                         CurrentPrice = historico.CurrentPrice,
                         OldPrice = historico.OldPrice,

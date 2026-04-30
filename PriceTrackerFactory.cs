@@ -11,11 +11,12 @@ namespace PriceTracker
             _serviceProvider = serviceProvider;
         }
 
-        public IPriceScraper CreatePriceTracker(string platform)
+        public IPriceScraper CreatePriceTracker(Platform platform)
         {
             return platform switch
             {
-                "Mercado Livre" => _serviceProvider.GetRequiredService<MeliStrategy>(),
+                Platform.Meli => _serviceProvider.GetRequiredService<MeliStrategy>(),
+                Platform.Kabum => _serviceProvider.GetRequiredService<KabumStrategy>(),
                 _ => throw new NotSupportedException($"Platform '{platform}' is not supported.")
             };
         }

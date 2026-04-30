@@ -2,7 +2,7 @@
 
 namespace PriceTracker.Infrastructure
 {
-    public class PriceHistoryRepository : IPriceHistoryRepository
+    public class PriceHistoryRepository
     {
 
     }
