@@ -2,26 +2,25 @@
 {
     public class PriceHistory
     {
-        public long Id { get; set; }
-        public string ProductName { get; set; }
-        public string Platform { get; set; }
-        public string Link { get; set; }
-        public string CurrentPrice { get; set; }
-        public string OldPrice { get; set; }
-        //public bool Changed => PriceChanged();
+        public long Id { get; protected set; }
+        public string ProductDescription { get; private set; }
+        public string Platform { get; private set; }
+        public string Url { get; private set; }
+        public DateTime RecordedAt { get; private set; }
+        public decimal Price { get; private set; }
 
-        public PriceHistory()
-        {
-            ProductName = string.Empty;
-            Platform = string.Empty;
-            Link = string.Empty;
-            CurrentPrice = string.Empty;
-            OldPrice = string.Empty;
-        }
+        private PriceHistory() { }
 
-        public bool PriceChanged()
+        public static PriceHistory Create(string description, string platform, string url, decimal price)
         {
-            return CurrentPrice != OldPrice;
+            return new PriceHistory
+            {
+                ProductDescription = description,
+                Platform = platform,
+                Url = url,
+                Price = price,
+                RecordedAt = DateTime.UtcNow
+            };
         }
     }
 }
