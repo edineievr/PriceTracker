@@ -1,14 +1,14 @@
 ﻿using AngleSharp;
 using PriceTracker.DTOs;
 using PriceTracker.Intefaces;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace PriceTracker.Strategies
 {
     public class MeliStrategy : IPriceScraper
     {
-
-        public async Task<PriceAlertDto> ExtractPrice(string url)
+        public async Task<ProductTrackingResult> ExtractPrice(string url)
         {
             try
             {
@@ -16,20 +16,20 @@ namespace PriceTracker.Strategies
                 var context = BrowsingContext.New(config);
                 var document = await context.OpenAsync(url);
 
-                var priceAlert = new PriceAlertDto
+                var result = new ProductTrackingResult
                 {
-                    Platform = "Mercado Livre"
+                    Platform = Platform.Meli,
                 };                
                 
                 var titleElement = document.QuerySelector("h1.ui-pdp-title");//extrai o nome do produto atraves do titulo no site do meli
                 
                 if (titleElement != null)
                 {
-                    priceAlert.ProductDescription = titleElement.TextContent.Trim();
+                    result.ProductDescription = titleElement.TextContent.Trim();
                 }
                 else
                 {
-                    priceAlert.ProductDescription = "Não foi possível extrair o nome, verificar metodo de extração";
+                    result.ProductDescription = "Não foi possível extrair o nome, verificar metodo de extração";
                 }                
                 
                 var priceContainer = document.QuerySelector("div.ui-pdp-price__second-line");//extrai o preço do produto atraves do container onde o preço é exibido no site do meli
@@ -44,12 +44,12 @@ namespace PriceTracker.Strategies
                         var fraction = fractionElement.TextContent.Trim();//pega numero à esquerda da vírgula
                         var cents = centsElement.TextContent.Trim(); //pega numero à direita da vírgula  
 
-                        var priceString = $"{fraction},{cents}";
-                        priceAlert.CurrentPrice = priceString;
+                        var priceString = $"{fraction}.{cents}";
+                        result.Price = decimal.Parse(priceString, CultureInfo.InvariantCulture);
                     }                  
                 }
 
-                return priceAlert;
+                return result;
             }
             catch (Exception ex)
             {
