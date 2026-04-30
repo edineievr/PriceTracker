@@ -10,11 +10,11 @@ namespace PriceTracker.Services
 
         public NotificationService()
         {
-            DotNetEnv.Env.Load();
+            DotNetEnv.Env.Load();//mover isso aqui pro program quando o job for implementado
             _apiKey = Environment.GetEnvironmentVariable("TELEGRAM_API_KEY");
             _chatId = Environment.GetEnvironmentVariable("TELEGRAM_CHAT_ID");
         }
-        public async Task SendNotification(PriceAlertDto priceAlert)
+        public async Task SendNotification(ProductTrackingResult priceAlert)
         {
 
             var httpClient = new HttpClient();            
