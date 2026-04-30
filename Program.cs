@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddScoped<MeliStrategy>();
+builder.Services.AddScoped<KabumStrategy>();
 
 var app = builder.Build();
 
