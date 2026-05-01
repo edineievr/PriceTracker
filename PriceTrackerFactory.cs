@@ -16,7 +16,7 @@ namespace PriceTracker
             return platform switch
             {
                 Platform.Meli => _serviceProvider.GetRequiredService<MeliStrategy>(),
-                Platform.Kabum => _serviceProvider.GetRequiredService<KabumStrategy>(),
+                //Platform.Kabum => _serviceProvider.GetRequiredService<KabumStrategy>(),
                 _ => throw new NotSupportedException($"Platform '{platform}' is not supported.")
             };
         }

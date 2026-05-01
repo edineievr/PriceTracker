@@ -44,7 +44,7 @@ namespace PriceTracker.Strategies
                         var fraction = fractionElement.TextContent.Trim();//pega numero à esquerda da vírgula
                         var cents = centsElement.TextContent.Trim(); //pega numero à direita da vírgula  
 
-                        var priceString = $"{fraction}.{cents}";
+                        var priceString = $"{fraction},{cents}";
                         result.Price = decimal.Parse(priceString, CultureInfo.InvariantCulture);
                     }                  
                 }

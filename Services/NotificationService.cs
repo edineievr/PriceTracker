@@ -1,4 +1,5 @@
 ﻿using PriceTracker.DTOs;
+using PriceTracker.Models;
 using static System.Net.WebRequestMethods;
 
 namespace PriceTracker.Services
@@ -14,7 +15,7 @@ namespace PriceTracker.Services
             _apiKey = Environment.GetEnvironmentVariable("TELEGRAM_API_KEY");
             _chatId = Environment.GetEnvironmentVariable("TELEGRAM_CHAT_ID");
         }
-        public async Task SendNotification(ProductTrackingResult priceAlert)
+        public async Task Notify(PriceAlert priceAlert)
         {
 
             var httpClient = new HttpClient();            
@@ -22,7 +23,7 @@ namespace PriceTracker.Services
             var payload = new
             {
                 chat_id = _chatId,
-                text = $"Alerta de Preço: {priceAlert.ProductDescription}\nPreço Atual: {priceAlert.CurrentPrice}\nPlataforma: {priceAlert.Platform}",
+                text = $"Alerta de Preço\nProduto: {priceAlert.ProductDescription}\nPreço Atual: {priceAlert.CurrentPrice}\nPlataforma: {priceAlert.Platform.ToString()}",
                 parse_mode = "Markdown"
             };
 

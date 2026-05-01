@@ -1,7 +1,6 @@
 using PriceTracker.Services;
 using PriceTracker.Strategies;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
