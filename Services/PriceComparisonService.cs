@@ -1,4 +1,5 @@
 ﻿using PriceTracker.DTOs;
+using PriceTracker.Infrastructure;
 using PriceTracker.Intefaces;
 using PriceTracker.Models;
 
@@ -6,52 +7,49 @@ namespace PriceTracker.Services
 {
     public class PriceComparisonService
     {
-        private readonly IPriceScraper _priceScraper;
+
         private readonly NotificationService _notificationService;
         private readonly PriceTrackerFactory _priceTrackerFactory;
+        private readonly Database _database;
 
-        public PriceComparisonService(IPriceScraper priceScraper, NotificationService notificationService, PriceTrackerFactory priceTrackerFactory)
+        public PriceComparisonService(NotificationService notificationService, PriceTrackerFactory priceTrackerFactory, Database database)
         {
-            _priceScraper = priceScraper;
             _notificationService = notificationService;
             _priceTrackerFactory = priceTrackerFactory;
+            _database = database;
         }
 
         public async void PriceComparison(string url)
         {
-            //buscar no banco os produtos a serem monitorados
+            var products = _database.GetProductsToTrack();
 
-            //o prduto conterá a respectiva plataforma
-
-            //aqui eu resolvo qual estrategia de extração de preço a ser utilizada, de acordo com a plataforma do produto
-
-            var result = await _priceScraper.ExtractPrice(url) ?? throw new Exception("Falha ao extrair informações da url informada");
-
-            var historico = new PriceHistory
+            if (products.Count == 0)
             {
-                ProductName = result.ProductDescription,
-                Platform = result.Platform,
-                Link = url,
-                CurrentPrice = result.CurrentPrice
-            };
+                throw new Exception("Nenhum produto cadastrado para monitoramento");
+            }
 
-
-            if (!string.IsNullOrWhiteSpace(historico.OldPrice))
+            foreach (var product in products)
             {
-                if (historico.PriceChanged())
+                var priceScraper = _priceTrackerFactory.CreatePriceTracker(product.Platform);
+
+                var result = await priceScraper.ExtractPrice(url) ?? throw new Exception("Falha ao extrair informações da url informada");
+
+                var oldHistory = _database.GetPriceHistory();
+
+                var newHistory = PriceHistory.Create(result.ProductDescription, result.Platform, result.Price);
+
+                _database.InsertPriceHistory(newHistory);
+
+                if (oldHistory != null && oldHistory.Price > newHistory.Price)
                 {
-                    var priceAlert = new ProductTrackingResult
+                    await _notificationService.Notify(new PriceAlert
                     {
-                        CurrentPrice = historico.CurrentPrice,
-                        OldPrice = historico.OldPrice,
-                        ProductDescription = historico.ProductName
-                    };
-
-                    await _notificationService.SendNotification(priceAlert);
+                        ProductDescription = newHistory.ProductDescription,
+                        Platform = newHistory.Platform,
+                        CurrentPrice = newHistory.Price,
+                    });
                 }
-            }            
-
-            //persistir o histórico de preços no banco de dados independente de ter ou não alteração de preço
+            }
         }
     }
 }
