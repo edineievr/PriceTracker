@@ -22,7 +22,11 @@ Notification Service desacoplado — troca de canal sem impacto no fluxo princip
 **Status atual**
 
 ✅ Banco de dados e histórico de preços
+
 ✅ Notification Service via Telegram
+
 ✅ Estratégia Mercado Livre implementada
+
 🔄 Estratégia Kabum em desenvolvimento
+
 🔄 Alimentação automática do banco em avaliação
