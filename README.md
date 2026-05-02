@@ -1,4 +1,5 @@
 **PriceTracker**
+
 Monitoramento automatizado de preços de produtos específicos com notificação via Telegram.
 
 **O problema**
