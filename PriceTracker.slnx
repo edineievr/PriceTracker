@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="PriceTracker.Test/PriceTracker.Test.csproj" Id="7800e750-e673-4a92-8d80-8e479588de55" />
+  <Project Path="PriceTracker.Worker/PriceTracker.Worker.csproj" />
+</Solution>
