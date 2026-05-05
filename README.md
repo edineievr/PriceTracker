@@ -4,7 +4,7 @@ Monitoramento automatizado de preços de produtos específicos com notificação
 
 **O problema**
 
-Queria acompanhar preços de peças para montar um PC novo, mas os scrapers existentes são genéricos demais. Precisava de algo fechado, focado exatamente nos produtos que me interessam.
+Queria acompanhar preços de peças para montar um PC novo, mas os scrapers existentes são genéricos demais. Precisava de algo fechado, focado exatamente nos produtos que me interessam em plataformas específicas
 
 **Como funciona**
 
