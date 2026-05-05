@@ -28,14 +28,14 @@ namespace PriceTracker.Worker.Jobs
 
                 if (products.Count == 0)
                 {
-                    throw new Exception("Nenhum produto cadastrado para monitoramento");
+                    throw new Exception("Nenhum produto cadastrado para monitoramento");//mover isso aqui pra um logger, nao quero o fluxo interrompido
                 }
 
                 foreach (var product in products)
                 {
                     var priceScraper = _priceTrackerFactory.CreatePriceTracker(product.Platform);
 
-                    var result = await priceScraper.ExtractPrice(product.Url) ?? throw new Exception("Falha ao extrair informações da url informada");
+                    var result = await priceScraper.ExtractPrice(product.Url) ?? throw new Exception("Falha ao extrair informações da url informada");//mesma coisa aqui, logar e continuar o fluxo
 
                     var oldHistory = _database.GetPriceHistory();
 
