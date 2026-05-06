@@ -1,16 +1,72 @@
+using PriceTracker.Worker.Factories;
+using PriceTracker.Worker.Infrastructure;
+using PriceTracker.Worker.Intefaces;
+using PriceTracker.Worker.Models;
+using PriceTracker.Worker.Services;
+
 namespace Pricetracker.Worker
 {
-    public class Worker(ILogger<Worker> logger) : BackgroundService
+    public class Worker : BackgroundService
     {
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+
+        public Worker(IServiceScopeFactory serviceScopeFactory)
+        {
+            _serviceScopeFactory = serviceScopeFactory;
+        }
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            while (!stoppingToken.IsCancellationRequested)
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+
+            while (await timer.WaitForNextTickAsync(stoppingToken))
             {
-                if (logger.IsEnabled(LogLevel.Information))
-                {
-                    logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                using var scope = _serviceScopeFactory.CreateScope();
+
+                var database = scope.ServiceProvider.GetRequiredService<Database>();
+
+                var factory = scope.ServiceProvider.GetRequiredService<PriceTrackerFactory>();
+
+                var comparisonService = scope.ServiceProvider.GetRequiredService<PriceComparisonService>();
+
+                var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
+
+                var products = await database.GetProductsToTrack();
+
+                Console.WriteLine("Worker iniciado");
+
+                foreach (var product in products)
+                {                    
+                    try
+                    {
+                        var strategy = factory.GetStrategy(product.Platform);
+
+                        var trackingResult = await strategy.ExtractPriceAsync(product.Url);
+
+                        var priceHistory = PriceHistory.Create(product.Description, product.Platform, trackingResult.Price);
+
+                        var oldHistory = await database.GetLastPriceHistoryAsync();//aqui tá bugado, preciso pegar o histórico do produto específico, não o último de todos os produtos
+
+                        if (oldHistory is null)//se nao houver historico eu notifico o primeiro preço
+                        {
+                            await notificationService.NotifyAsync(PriceAlert.Create(product.Description, product.Platform, trackingResult.Price));                            
+                        }
+                        else
+                        {
+                            await comparisonService.ComparePricesAsync(priceHistory, oldHistory);
+                        }
+
+                        await database.InsertPriceHistoryAsync(priceHistory);
+
+                        Console.WriteLine($"Produto consultado");
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Erro ao processar o produto {product.Description}: {ex.Message} - Data/Hora: {DateTime.Now}");
+                        continue;
+                    }
                 }
-                await Task.Delay(1000, stoppingToken);
             }
         }
     }
