@@ -8,7 +8,7 @@ namespace PriceTracker.Worker.Strategies
 {
     public class MeliStrategy : IPriceScraper
     {
-        public async Task<ProductTrackingResult> ExtractPrice(string url)
+        public async Task<ProductTrackingResult> ExtractPriceAsync(string url)
         {
             try
             {
