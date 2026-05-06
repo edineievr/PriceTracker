@@ -17,7 +17,7 @@ namespace Pricetracker.Worker
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+            using var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
 
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
@@ -43,9 +43,9 @@ namespace Pricetracker.Worker
 
                         var trackingResult = await strategy.ExtractPriceAsync(product.Url);
 
-                        var priceHistory = PriceHistory.Create(product.Description, product.Platform, trackingResult.Price);
+                        var priceHistory = PriceHistory.Create(product.Id, product.Description, product.Platform, trackingResult.Price);
 
-                        var oldHistory = await database.GetLastPriceHistoryAsync();//aqui tá bugado, preciso pegar o histórico do produto específico, não o último de todos os produtos
+                        var oldHistory = await database.GetLastPriceHistoryAsync(product.Id);
 
                         if (oldHistory is null)//se nao houver historico eu notifico o primeiro preço
                         {

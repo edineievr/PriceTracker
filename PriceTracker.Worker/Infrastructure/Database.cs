@@ -24,10 +24,13 @@ namespace PriceTracker.Worker.Infrastructure
             command.CommandText = """
                  CREATE TABLE IF NOT EXISTS PriceHistory                 
                  (Id INTEGER PRIMARY KEY AUTOINCREMENT,
+                 ProductId FOREING        INTEGER NOT NULL,
                  ProductDescription  TEXT NOT NULL,
                  Platform            TEXT NOT NULL,
                  Price               REAL NOT NULL,
-                 RecordedAt          TEXT NOT NULL);                
+                 RecordedAt          TEXT NOT NULL,
+                 FOREIGN KEY (ProductId) REFERENCES Product(Id)
+                 );                
                 
 
                  CREATE TABLE IF NOT EXISTS Product (
@@ -49,9 +52,10 @@ namespace PriceTracker.Worker.Infrastructure
             var command = connection.CreateCommand();
 
             command.CommandText = """                
-                    INSERT INTO PriceHistory (ProductDescription, Platform, Price, RecordedAt)
-                    VALUES (@ProductDescription, @Platform, @Price, @RecordedAt)
+                    INSERT INTO PriceHistory (ProductId, ProductDescription, Platform, Price, RecordedAt)
+                    VALUES (@ProductId, @ProductDescription, @Platform, @Price, @RecordedAt)
                    """;
+            command.Parameters.AddWithValue("@ProductId", priceHistory.ProductId);
             command.Parameters.AddWithValue("@ProductDescription", priceHistory.ProductDescription);
             command.Parameters.AddWithValue("@Platform", priceHistory.Platform.ToString());
             command.Parameters.AddWithValue("@Price", priceHistory.Price);
@@ -60,7 +64,7 @@ namespace PriceTracker.Worker.Infrastructure
             command.ExecuteNonQuery();
         }
 
-        public async Task<PriceHistory?> GetLastPriceHistoryAsync()
+        public async Task<PriceHistory?> GetLastPriceHistoryAsync(int productId)
         {
             using var connection = new SqliteConnection(_connectionString);
 
@@ -68,16 +72,18 @@ namespace PriceTracker.Worker.Infrastructure
             var command = connection.CreateCommand();
 
             command.CommandText = """                
-                    SELECT Id, ProductDescription, Platform, Price, RecordedAt
+                    SELECT Id, ProductId, ProductDescription, Platform, Price, RecordedAt
                     FROM PriceHistory
+                    WHERE ProductId = @ProductId
                     ORDER BY RecordedAt DESC
                     LIMIT 1
                    """;
+            command.Parameters.AddWithValue("@ProductId", productId);
             using var reader = command.ExecuteReader();
 
             if (reader.Read())
             {
-                var historico = PriceHistory.Reconstitute(reader.GetInt32(0), reader.GetString(1), Enum.Parse<Platform>(reader.GetString(2)), reader.GetDecimal(4), DateTime.Parse(reader.GetString(5), null, DateTimeStyles.RoundtripKind));
+                var historico = PriceHistory.Reconstitute(reader.GetInt32(0), reader.GetInt32(1), reader.GetString(2), Enum.Parse<Platform>(reader.GetString(3)), reader.GetDecimal(4), DateTime.Parse(reader.GetString(5), null, DateTimeStyles.RoundtripKind));
 
                 return historico;
             }
