@@ -8,7 +8,7 @@ namespace PriceTracker.Test.Fakes
         public bool WasCalled { get; private set; }
         public PriceAlert? LastAlert { get; private set; }
 
-        public Task Notify(PriceAlert alert)
+        public Task NotifyAsync(PriceAlert alert)
         {
             WasCalled = true;
             LastAlert = alert;

@@ -14,21 +14,20 @@ namespace PriceTracker.Worker.Infrastructure
             _connectionString = connectionString;
         }
 
-        public void Initialize()//esse metodo cuida da estrutura do banco, então qualquer tabela nova deve ser criada aqui
+        public async Task InitializeAsync()//esse metodo cuida da estrutura do banco, então qualquer tabela nova deve ser criada aqui
         {
             using var connection = new SqliteConnection(_connectionString);
 
-            connection.Open();
-
+            await connection.OpenAsync();
             var command = connection.CreateCommand();
 
-            command.CommandText = """                
+            command.CommandText = """
                  CREATE TABLE IF NOT EXISTS PriceHistory                 
                  (Id INTEGER PRIMARY KEY AUTOINCREMENT,
                  ProductDescription  TEXT NOT NULL,
                  Platform            TEXT NOT NULL,
                  Price               REAL NOT NULL,
-                 RecordedAt          TEXT NOT NULL)                
+                 RecordedAt          TEXT NOT NULL);                
                 
 
                  CREATE TABLE IF NOT EXISTS Product (
@@ -42,12 +41,11 @@ namespace PriceTracker.Worker.Infrastructure
             command.ExecuteNonQuery();
         }
 
-        public void InsertPriceHistory(PriceHistory priceHistory)
+        public async Task InsertPriceHistoryAsync(PriceHistory priceHistory)
         {
             using var connection = new SqliteConnection(_connectionString);
 
-            connection.Open();
-
+            await connection.OpenAsync();
             var command = connection.CreateCommand();
 
             command.CommandText = """                
@@ -62,16 +60,15 @@ namespace PriceTracker.Worker.Infrastructure
             command.ExecuteNonQuery();
         }
 
-        public PriceHistory? GetPriceHistory()
+        public async Task<PriceHistory?> GetLastPriceHistoryAsync()
         {
             using var connection = new SqliteConnection(_connectionString);
 
-            connection.Open();
-
+            await connection.OpenAsync();
             var command = connection.CreateCommand();
 
             command.CommandText = """                
-                    SELECT Id, ProductDescription, Platform, Url, Price, RecordedAt
+                    SELECT Id, ProductDescription, Platform, Price, RecordedAt
                     FROM PriceHistory
                     ORDER BY RecordedAt DESC
                     LIMIT 1
@@ -88,12 +85,11 @@ namespace PriceTracker.Worker.Infrastructure
             return null;
         }
 
-        public List<Product> GetProductsToTrack()
+        public async Task<List<Product>> GetProductsToTrack()
         {
             using var connection = new SqliteConnection(_connectionString);
 
-            connection.Open();
-
+            await connection.OpenAsync();
             var command = connection.CreateCommand();
 
             command.CommandText = """                

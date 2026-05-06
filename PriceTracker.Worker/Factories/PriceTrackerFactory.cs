@@ -12,12 +12,12 @@ namespace PriceTracker.Worker.Factories
             _serviceProvider = serviceProvider;
         }
 
-        public IPriceScraper CreatePriceTracker(Platform platform)
+        public IPriceScraper GetStrategy(Platform platform)
         {
             return platform switch
             {
                 Platform.Meli => _serviceProvider.GetRequiredService<MeliStrategy>(),
-                //Platform.Kabum => _serviceProvider.GetRequiredService<KabumStrategy>(),
+                Platform.Kabum => _serviceProvider.GetRequiredService<KabumStrategy>(),
                 _ => throw new NotSupportedException($"Platform '{platform}' is not supported.")
             };
         }

@@ -4,6 +4,6 @@ namespace PriceTracker.Worker.Intefaces
 {
     public interface INotificationService
     {
-        Task Notify(PriceAlert alert);
+        Task NotifyAsync(PriceAlert alert);
     }
 }

@@ -3,6 +3,8 @@
 .vs/
 bin/
 obj/
+.env
+price_tracker.db
 
 # User-specific files
 *.suo

@@ -14,7 +14,7 @@ namespace PriceTracker.Worker.Services
             _apiKey = Environment.GetEnvironmentVariable("TELEGRAM_API_KEY");
             _chatId = Environment.GetEnvironmentVariable("TELEGRAM_CHAT_ID");
         }
-        public async Task Notify(PriceAlert priceAlert)
+        public async Task NotifyAsync(PriceAlert priceAlert)
         {
 
             var httpClient = new HttpClient();            
