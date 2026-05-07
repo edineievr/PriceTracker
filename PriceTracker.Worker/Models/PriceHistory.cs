@@ -5,6 +5,7 @@ namespace PriceTracker.Worker.Models
     public class PriceHistory
     {
         public int Id { get; protected set; }
+        public int ProductId { get; set; }
         public string ProductDescription { get; private set; }
         public Platform Platform { get; private set; }
         public DateTime RecordedAt { get; private set; }
@@ -12,10 +13,11 @@ namespace PriceTracker.Worker.Models
 
         private PriceHistory() { }
 
-        public static PriceHistory Create(string description, Platform platform, decimal price)
+        public static PriceHistory Create(int productId, string description, Platform platform, decimal price)
         {
             return new PriceHistory
             {
+                ProductId = productId,
                 ProductDescription = description,
                 Platform = platform,
                 Price = price,
@@ -23,11 +25,12 @@ namespace PriceTracker.Worker.Models
             };
         }
 
-        public static PriceHistory Reconstitute(int id, string description, Platform platform, decimal price, DateTime recordedAt)
+        public static PriceHistory Reconstitute(int id, int productId, string description, Platform platform, decimal price, DateTime recordedAt)
         {
             return new PriceHistory
             {
                 Id = id,
+                ProductId = productId,
                 ProductDescription = description,
                 Platform = platform,
                 Price = price,
