@@ -8,6 +8,7 @@ namespace PriceTracker.Worker.Services
     {
         private readonly string _apiKey;
         private readonly string _chatId;
+        private readonly HttpClient _httpClient = new();
 
         public NotificationService()
         {           
@@ -26,7 +27,9 @@ namespace PriceTracker.Worker.Services
                 parse_mode = "Markdown"
             };
 
-            var response = await httpClient.PostAsJsonAsync($"https://api.telegram.org/bot{_apiKey}/sendMessage",payload);
+            var response = await _httpClient.PostAsJsonAsync($"https://api.telegram.org/bot{_apiKey}/sendMessage",payload);
+
+            _logger.LogInformation("Notificação enviada!");
 
             Console.WriteLine(await response.Content.ReadAsStringAsync());
         }
