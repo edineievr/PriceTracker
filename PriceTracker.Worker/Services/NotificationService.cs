@@ -8,16 +8,18 @@ namespace PriceTracker.Worker.Services
     {
         private readonly string _apiKey;
         private readonly string _chatId;
+        private readonly ILogger<NotificationService> _logger;
+        private readonly HttpClient _httpClient = new();
 
-        public NotificationService()
+        public NotificationService(ILogger<NotificationService> logger)
         {           
             _apiKey = Environment.GetEnvironmentVariable("TELEGRAM_API_KEY");
             _chatId = Environment.GetEnvironmentVariable("TELEGRAM_CHAT_ID");
+            _logger = logger;
         }
         public async Task NotifyAsync(PriceAlert priceAlert)
         {
-
-            var httpClient = new HttpClient();            
+            _logger.LogInformation("Enviando notificação...{productDescription}", priceAlert.ProductDescription);                 
 
             var payload = new
             {
@@ -26,9 +28,11 @@ namespace PriceTracker.Worker.Services
                 parse_mode = "Markdown"
             };
 
-            var response = await httpClient.PostAsJsonAsync($"https://api.telegram.org/bot{_apiKey}/sendMessage",payload);
+            var response = await _httpClient.PostAsJsonAsync($"https://api.telegram.org/bot{_apiKey}/sendMessage",payload);
 
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
+            _logger.LogInformation("Notificação enviada!");
+
+            _logger.LogWarning("Resposta da API: {response}", await response.Content.ReadAsStringAsync());
         }
     }
 }

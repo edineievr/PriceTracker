@@ -9,17 +9,19 @@ namespace Pricetracker.Worker
     public class Worker : BackgroundService
     {
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ILogger<Worker> _logger;
 
-        public Worker(IServiceScopeFactory serviceScopeFactory)
+        public Worker(IServiceScopeFactory serviceScopeFactory, ILogger<Worker> logger)
         {
             _serviceScopeFactory = serviceScopeFactory;
+            _logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            using var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+            using var timer = new PeriodicTimer(TimeSpan.FromMinutes(30));
 
-            while (await timer.WaitForNextTickAsync(stoppingToken))
+            do
             {
                 using var scope = _serviceScopeFactory.CreateScope();
 
@@ -31,12 +33,12 @@ namespace Pricetracker.Worker
 
                 var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
-                var products = await database.GetProductsToTrack();
+                _logger.LogInformation("Iniciando nova rodada de monitoramento - Data/Hora: {dateTime}", DateTime.Now);
 
-                Console.WriteLine("Worker iniciado");
+                var products = await database.GetProductsToTrack();                
 
                 foreach (var product in products)
-                {                    
+                {
                     try
                     {
                         var strategy = factory.GetStrategy(product.Platform);
@@ -49,7 +51,7 @@ namespace Pricetracker.Worker
 
                         if (oldHistory is null)//se nao houver historico eu notifico o primeiro preço
                         {
-                            await notificationService.NotifyAsync(PriceAlert.Create(product.Description, product.Platform, trackingResult.Price));                            
+                            await notificationService.NotifyAsync(PriceAlert.Create(product.Description, product.Platform, trackingResult.Price));
                         }
                         else
                         {
@@ -58,16 +60,18 @@ namespace Pricetracker.Worker
 
                         await database.InsertPriceHistoryAsync(priceHistory);
 
-                        Console.WriteLine($"Produto consultado");
-                        
+                        _logger.LogInformation("Produto consultado: {productDescription}", product.Description);
+
+                        await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Erro ao processar o produto {product.Description}: {ex.Message} - Data/Hora: {DateTime.Now}");
+                        _logger.LogError(ex, "Erro ao processar o produto {productDescription} - Data/Hora: {dateTime}", product.Description, DateTime.UtcNow);
                         continue;
                     }
                 }
-            }
+            } while (await timer.WaitForNextTickAsync(stoppingToken));
         }
     }
 }

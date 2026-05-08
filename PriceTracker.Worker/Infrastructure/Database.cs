@@ -14,34 +14,37 @@ namespace PriceTracker.Worker.Infrastructure
             _connectionString = connectionString;
         }
 
-        public async Task InitializeAsync()//esse metodo cuida da estrutura do banco, então qualquer tabela nova deve ser criada aqui
+        public async Task InitializeAsync()
         {
             using var connection = new SqliteConnection(_connectionString);
 
             await connection.OpenAsync();
+
+            var walCommand = connection.CreateCommand();
+            walCommand.CommandText = "PRAGMA journal_mode=WAL;";
+            await walCommand.ExecuteNonQueryAsync();
+
             var command = connection.CreateCommand();
-
             command.CommandText = """
-                 CREATE TABLE IF NOT EXISTS PriceHistory                 
-                 (Id INTEGER PRIMARY KEY AUTOINCREMENT,
-                 ProductId FOREING        INTEGER NOT NULL,
-                 ProductDescription  TEXT NOT NULL,
-                 Platform            TEXT NOT NULL,
-                 Price               REAL NOT NULL,
-                 RecordedAt          TEXT NOT NULL,
-                 FOREIGN KEY (ProductId) REFERENCES Product(Id)
-                 );                
-                
+        CREATE TABLE IF NOT EXISTS Product (
+            Id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            Description TEXT NOT NULL,
+            Platform    TEXT NOT NULL,
+            Url         TEXT NOT NULL
+        );
 
-                 CREATE TABLE IF NOT EXISTS Product (
-                 Id          INTEGER PRIMARY KEY AUTOINCREMENT,
-                 Description TEXT NOT NULL,
-                 Platform    TEXT NOT NULL,
-                 Url         TEXT NOT NULL
-                     );
-                 """;
+        CREATE TABLE IF NOT EXISTS PriceHistory (
+            Id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+            ProductId          INTEGER NOT NULL,
+            ProductDescription TEXT NOT NULL,
+            Platform           TEXT NOT NULL,
+            Price              REAL NOT NULL,
+            RecordedAt         TEXT NOT NULL,
+            FOREIGN KEY (ProductId) REFERENCES Product(Id)
+        );
+        """;
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task InsertPriceHistoryAsync(PriceHistory priceHistory)

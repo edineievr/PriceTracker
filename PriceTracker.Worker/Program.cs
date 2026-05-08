@@ -4,6 +4,7 @@ using PriceTracker.Worker.Infrastructure;
 using PriceTracker.Worker.Intefaces;
 using PriceTracker.Worker.Services;
 using PriceTracker.Worker.Strategies;
+using Serilog;
 
 SQLitePCL.Batteries.Init();
 
@@ -11,7 +12,14 @@ DotNetEnv.Env.Load();
 
 var builder = Host.CreateApplicationBuilder(args);
 
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Warning()
+    .WriteTo.Console()
+    .WriteTo.File("D:\\Projects\\edineievr\\PriceTracker\\PriceTracker.Worker\\Logs\\pricetracker.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
 builder.Services.AddHostedService<Worker>();
+builder.Services.AddSerilog();
 builder.Services.AddScoped<MeliStrategy>();
 builder.Services.AddScoped<KabumStrategy>();
 builder.Services.AddScoped<PriceComparisonService>();
