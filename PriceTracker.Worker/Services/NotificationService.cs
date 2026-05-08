@@ -8,17 +8,18 @@ namespace PriceTracker.Worker.Services
     {
         private readonly string _apiKey;
         private readonly string _chatId;
+        private readonly ILogger<NotificationService> _logger;
         private readonly HttpClient _httpClient = new();
 
-        public NotificationService()
+        public NotificationService(ILogger<NotificationService> logger)
         {           
             _apiKey = Environment.GetEnvironmentVariable("TELEGRAM_API_KEY");
             _chatId = Environment.GetEnvironmentVariable("TELEGRAM_CHAT_ID");
+            _logger = logger;
         }
         public async Task NotifyAsync(PriceAlert priceAlert)
         {
-
-            var httpClient = new HttpClient();            
+            _logger.LogInformation("Enviando notificação...{productDescription}", priceAlert.ProductDescription);                 
 
             var payload = new
             {
@@ -31,7 +32,7 @@ namespace PriceTracker.Worker.Services
 
             _logger.LogInformation("Notificação enviada!");
 
-            Console.WriteLine(await response.Content.ReadAsStringAsync());
+            _logger.LogWarning("Resposta da API: {response}", await response.Content.ReadAsStringAsync());
         }
     }
 }
