@@ -1,9 +1,11 @@
 ﻿using AngleSharp;
+using Microsoft.Playwright;
 using PriceTracker.Worker.DTOs;
 using PriceTracker.Worker.Enums;
 using PriceTracker.Worker.Intefaces;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace PriceTracker.Worker.Strategies
@@ -19,33 +21,37 @@ namespace PriceTracker.Worker.Strategies
         public async Task<ProductTrackingResult> ExtractPriceAsync(string url)
         {
             try
-            {
-                var config = Configuration.Default.WithDefaultLoader();
-                var context = BrowsingContext.New(config);
-                var document = await context.OpenAsync(url);
+            {                
+                using var playwright = await Playwright.CreateAsync();
 
-                var result = new ProductTrackingResult
+                await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
+
+                // Cria uma nova página dentro do browser com User-Agent de browser real
+                // sem isso a Pichau identifica que não é humano e serve página de bloqueio
+                var page = await browser.NewContextAsync(new()
                 {
-                    Platform = Platform.Pichau,
-                };
+                    UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+                }).Result.NewPageAsync();
 
-                var titleElement = document.QuerySelector("h1.MuiTypography-root") ?? throw new Exception("Não foi possível extrair o titulo do produto.");//não faz sentido continuar se eu nao extrai o titulo.;
-
-                var priceContainer = document.QuerySelector("div.mui-1jk88bq-price_vista-extraSpacePriceVista") ?? throw new Exception("Não foi possível extrair o preço do produto.");
-
-                result.ProductDescription = titleElement.TextContent.Trim();
-
-                var priceText = priceContainer.TextContent.Trim();
-
+                // Navega até a URL e espera o HTML inicial carregar
+                // DOMContentLoaded é suficiente pq os meta tags chegam no HTML, antes do JS rodar
+                await page.GotoAsync(url, new() { WaitUntil = WaitUntilState.DOMContentLoaded });
+                
+                var title = await page.Locator("meta[property='og:title']").GetAttributeAsync("content") ?? throw new Exception("Não foi possível extrair o título do produto.");
+                
+                var priceText = await page.Locator("meta[name='product:price:amount']").GetAttributeAsync("content") ?? throw new Exception("Não foi possível extrair o preço do produto.");
+                
                 priceText = priceText.Replace("R$", "").Trim();
 
-                if (!decimal.TryParse(priceText, System.Globalization.NumberStyles.Currency, System.Globalization.CultureInfo.GetCultureInfo("pt-BR"), out decimal price))
+                if (!decimal.TryParse(priceText, NumberStyles.Currency, CultureInfo.InvariantCulture, out decimal price))
                     throw new Exception("Não foi possível converter o preço do produto.");
 
-                result.Price = price;
-
-                return result;
-
+                return new ProductTrackingResult
+                {
+                    Platform = Platform.Pichau,
+                    ProductDescription = title.Replace("| Pichau", "").Trim(),
+                    Price = price
+                };
             }
             catch (Exception ex)
             {
