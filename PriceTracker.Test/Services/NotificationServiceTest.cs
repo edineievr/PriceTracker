@@ -27,7 +27,7 @@ namespace PriceTracker.Test.Services
                 Platform = Platform.Kabum
             };
 
-            await _service.Notify(priceAlert);
+            await _service.NotifyAsync(priceAlert);
 
             var fake = (FakeNotificationService)_service;
 

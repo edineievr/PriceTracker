@@ -22,11 +22,11 @@ namespace PriceTracker.Test.Services
         public async Task When_PriceDecreases_Should_Notify()
         {
             // Arrange
-            var oldHistory = PriceHistory.Reconstitute(1, "Teste de Produto", Platform.Kabum, 100.00m, DateTime.UtcNow.AddDays(-1));
-            var newHistory = PriceHistory.Reconstitute(2, "Teste de Produto", Platform.Kabum, 90.00m, DateTime.UtcNow);
+            var oldHistory = PriceHistory.Reconstitute(id: 1, productId: 1, description: "Teste de Produto", platform: Platform.Kabum, price: 100.00m, recordedAt: DateTime.UtcNow.AddDays(-1));
+            var newHistory = PriceHistory.Reconstitute(id: 2, productId: 1, description: "Teste de Produto", platform: Platform.Kabum, price: 90.00m, recordedAt: DateTime.UtcNow);
 
             // Act & Assert
-            Assert.DoesNotThrowAsync(() => _service.PriceComparison(newHistory, oldHistory));
+            Assert.DoesNotThrowAsync(() => _service.ComparePricesAsync(newHistory, oldHistory));
             _fakeNotificationService.WasCalled.ShouldBeTrue();
             _fakeNotificationService.LastAlert?.CurrentPrice.ShouldBe(90.00m);
         }
