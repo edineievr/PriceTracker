@@ -9,6 +9,9 @@ namespace PriceTracker.Worker.Enums
 
         [Description("Kabum")]
         Kabum = 1,
+
+        [Description("Pichau")]
+        Pichau = 2,
         // Adicione outras plataformas conforme necessário
     }
 }

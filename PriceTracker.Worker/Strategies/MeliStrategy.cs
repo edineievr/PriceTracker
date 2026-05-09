@@ -1,4 +1,5 @@
 ﻿using AngleSharp;
+using Microsoft.Playwright;
 using PriceTracker.Worker.DTOs;
 using PriceTracker.Worker.Enums;
 using PriceTracker.Worker.Intefaces;
@@ -8,52 +9,49 @@ namespace PriceTracker.Worker.Strategies
 {
     public class MeliStrategy : IPriceScraper
     {
+        private readonly ILogger<MeliStrategy> _logger;
+
+        public MeliStrategy(ILogger<MeliStrategy> logger)
+        {
+            _logger = logger;
+        }
+
         public async Task<ProductTrackingResult> ExtractPriceAsync(string url)
         {
             try
             {
-                var config = Configuration.Default.WithDefaultLoader();
-                var context = BrowsingContext.New(config);
-                var document = await context.OpenAsync(url);
+                using var playwright = await Playwright.CreateAsync();
 
-                var result = new ProductTrackingResult
+                await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
+
+                var page = await browser.NewContextAsync(new()
+                {
+                    UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+                }).Result.NewPageAsync();
+
+                await page.GotoAsync(url, new() { WaitUntil = WaitUntilState.DOMContentLoaded });
+
+                // og:title vem como "Produto X - R$ 419,99", então separei pelo " - R$ "
+                var ogTitle = await page.Locator("meta[property='og:title']").GetAttributeAsync("content") ?? throw new Exception("Não foi possível extrair o título do produto.");
+
+                var parts = ogTitle.Split(" - R$ ");
+
+                var title = parts[0].Trim();
+                var priceText = parts.Length > 1 ? parts[1].Trim() : throw new Exception("Não foi possível extrair o preço do produto.");
+
+                if (!decimal.TryParse(priceText, NumberStyles.Currency, CultureInfo.GetCultureInfo("pt-BR"), out decimal price))
+                    throw new Exception("Não foi possível converter o preço do produto.");
+
+                return new ProductTrackingResult
                 {
                     Platform = Platform.Meli,
-                };                
-                
-                var titleElement = document.QuerySelector("h1.ui-pdp-title");//extrai o nome do produto atraves do titulo no site do meli
-                
-                if (titleElement != null)
-                {
-                    result.ProductDescription = titleElement.TextContent.Trim();
-                }
-                else
-                {
-                    result.ProductDescription = "Não foi possível extrair o nome, verificar metodo de extração";
-                }                
-                
-                var priceContainer = document.QuerySelector("div.ui-pdp-price__second-line");//extrai o preço do produto atraves do container onde o preço é exibido no site do meli
-
-                if (priceContainer != null)
-                {                    
-                    var fractionElement = priceContainer.QuerySelector("span[data-andes-money-amount-fraction]");
-                    var centsElement = priceContainer.QuerySelector("span[data-andes-money-amount-cents]");
-
-                    if (fractionElement != null && centsElement != null)
-                    {
-                        var fraction = fractionElement.TextContent.Trim();//pega numero à esquerda da vírgula
-                        var cents = centsElement.TextContent.Trim(); //pega numero à direita da vírgula  
-
-                        var priceString = $"{fraction},{cents}";
-                        result.Price = decimal.Parse(priceString, CultureInfo.InvariantCulture);
-                    }                  
-                }
-
-                return result;
+                    ProductDescription = title,
+                    Price = price
+                };
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Erro ao extrair preço do Mercado Livre: {ex.Message}");//mudar isso aqui pra logar o erro em um arquivo de log ou algo do tipo
+                _logger.LogError(ex, "Erro ao extrair preço do produto no Meli. URL: {Url}", url);
                 throw;
             }
         }

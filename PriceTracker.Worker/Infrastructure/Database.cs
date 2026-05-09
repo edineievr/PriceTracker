@@ -30,7 +30,8 @@ namespace PriceTracker.Worker.Infrastructure
             Id          INTEGER PRIMARY KEY AUTOINCREMENT,
             Description TEXT NOT NULL,
             Platform    TEXT NOT NULL,
-            Url         TEXT NOT NULL
+            Url         TEXT NOT NULL,
+            IsActive   INTEGER NOT NULL DEFAULT 1
         );
 
         CREATE TABLE IF NOT EXISTS PriceHistory (
@@ -104,6 +105,7 @@ namespace PriceTracker.Worker.Infrastructure
             command.CommandText = """                
                     SELECT Id, Description, Platform, Url
                     FROM Product
+                    WHERE IsActive = 1
                    """;
             using var reader = command.ExecuteReader();
 
@@ -111,13 +113,7 @@ namespace PriceTracker.Worker.Infrastructure
 
             while (reader.Read())
             {
-                var product = new Product
-                {
-                    Id = reader.GetInt32(0),
-                    Description = reader.GetString(1),
-                    Platform = Enum.Parse<Platform>(reader.GetString(2)),
-                    Url = reader.GetString(3),
-                };
+                var product = Product.Create(reader.GetInt32(0), reader.GetString(1), Enum.Parse<Platform>(reader.GetString(2)), reader.GetString(3));
                 products.Add(product);
             }
             return products; 

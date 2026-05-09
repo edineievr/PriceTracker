@@ -15,10 +15,12 @@ namespace Pricetracker.Worker
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
-        }
+        }        
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            _logger.LogInformation("Worker iniciado - Data/Hora: {dateTime}", DateTime.Now.ToString("dd/MM/yyyy - HH:mm"));
+
             using var timer = new PeriodicTimer(TimeSpan.FromMinutes(30));
 
             do
@@ -33,9 +35,7 @@ namespace Pricetracker.Worker
 
                 var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
 
-                _logger.LogInformation("Iniciando nova rodada de monitoramento - Data/Hora: {dateTime}", DateTime.Now);
-
-                var products = await database.GetProductsToTrack();                
+                var products = await database.GetProductsToTrack();
 
                 foreach (var product in products)
                 {
@@ -60,14 +60,14 @@ namespace Pricetracker.Worker
 
                         await database.InsertPriceHistoryAsync(priceHistory);
 
-                        _logger.LogInformation("Produto consultado: {productDescription}", product.Description);
+                        _logger.LogInformation("Produto consultado: {productDescription} - Plataforma: {platform}", product.Description, product.Platform);
 
                         await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
 
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Erro ao processar o produto {productDescription} - Data/Hora: {dateTime}", product.Description, DateTime.UtcNow);
+                        _logger.LogWarning(ex, "Produto {productDescription} pulado por erro - {dateTime}", product.Description, DateTime.Now.ToString("dd/MM/yyyy - HH:mm"));
                         continue;
                     }
                 }
