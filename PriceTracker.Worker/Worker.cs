@@ -60,7 +60,7 @@ namespace Pricetracker.Worker
 
                         await database.InsertPriceHistoryAsync(priceHistory);
 
-                        _logger.LogInformation("Produto consultado: {productDescription}", product.Description);
+                        _logger.LogInformation("Produto consultado: {productDescription} - Plataforma: {platform}", product.Description, product.Platform);
 
                         await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
 
