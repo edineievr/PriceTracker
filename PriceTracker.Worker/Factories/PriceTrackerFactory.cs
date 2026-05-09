@@ -16,7 +16,7 @@ namespace PriceTracker.Worker.Factories
         {
             return platform switch
             {
-                //Platform.Meli => _serviceProvider.GetRequiredService<MeliStrategy>(),
+                Platform.Meli => _serviceProvider.GetRequiredService<MeliStrategy>(),
                 Platform.Kabum => _serviceProvider.GetRequiredService<KabumStrategy>(),
                 Platform.Pichau => _serviceProvider.GetRequiredService<PichauStrategy>(),
                 _ => throw new NotSupportedException($"Plataforma '{platform}' não suportada.")

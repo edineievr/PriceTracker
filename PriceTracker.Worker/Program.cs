@@ -19,7 +19,7 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Services.AddHostedService<Worker>();
 builder.Services.AddSerilog();
-//builder.Services.AddScoped<MeliStrategy>();
+builder.Services.AddScoped<MeliStrategy>();
 builder.Services.AddScoped<PichauStrategy>();
 builder.Services.AddScoped<KabumStrategy>();
 builder.Services.AddScoped<PriceComparisonService>();
