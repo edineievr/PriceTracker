@@ -24,7 +24,7 @@ namespace PriceTracker.Worker.Services
             var payload = new
             {
                 chat_id = _chatId,
-                text = $"Alerta de Preço\n*{priceAlert.ProductDescription}*\n: *R$ {priceAlert.CurrentPrice}*\nPlataforma: *{priceAlert.Platform}*",
+                text = $"Alerta de Preço\n*{priceAlert.ProductDescription}*\n*R$ {priceAlert.CurrentPrice}*\nPlataforma: *{priceAlert.Platform}*",
                 parse_mode = "Markdown"
             };
 
