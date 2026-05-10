@@ -48,6 +48,26 @@ namespace PriceTracker.Worker.Infrastructure
             await command.ExecuteNonQueryAsync();
         }
 
+        public async Task InsertProductAsync(Product product)
+        {
+            using var connection = new SqliteConnection(_connectionString);
+
+            await connection.OpenAsync();
+
+            var command = connection.CreateCommand();
+
+            command.CommandText = """                
+                    INSERT INTO Product (Description, Platform, Url, IsActive)
+                    VALUES (@Description, @Platform, @Url, @IsActive)
+                   """;
+            command.Parameters.AddWithValue("@Description", product.Description);
+            command.Parameters.AddWithValue("@Platform", product.Platform.ToString());
+            command.Parameters.AddWithValue("@Url", product.Url);
+            command.Parameters.AddWithValue("@IsActive", product.IsActive);
+
+            await command.ExecuteNonQueryAsync();
+        }
+
         public async Task InsertPriceHistoryAsync(PriceHistory priceHistory)
         {
             using var connection = new SqliteConnection(_connectionString);
@@ -65,7 +85,7 @@ namespace PriceTracker.Worker.Infrastructure
             command.Parameters.AddWithValue("@Price", priceHistory.Price);
             command.Parameters.AddWithValue("@RecordedAt", priceHistory.RecordedAt.ToString("o"));
 
-            command.ExecuteNonQuery();
+            await command.ExecuteNonQueryAsync();
         }
 
         public async Task<PriceHistory?> GetLastPriceHistoryAsync(int productId)
@@ -83,7 +103,7 @@ namespace PriceTracker.Worker.Infrastructure
                     LIMIT 1
                    """;
             command.Parameters.AddWithValue("@ProductId", productId);
-            using var reader = command.ExecuteReader();
+            using var reader = await command.ExecuteReaderAsync();
 
             if (reader.Read())
             {
@@ -103,19 +123,20 @@ namespace PriceTracker.Worker.Infrastructure
             var command = connection.CreateCommand();
 
             command.CommandText = """                
-                    SELECT Id, Description, Platform, Url
+                    SELECT Id, Description, Platform, Url, IsActive
                     FROM Product
                     WHERE IsActive = 1
                    """;
-            using var reader = command.ExecuteReader();
+            using var reader = await command.ExecuteReaderAsync();
 
             var products = new List<Product>();
 
             while (reader.Read())
             {
-                var product = Product.Create(reader.GetInt32(0), reader.GetString(1), Enum.Parse<Platform>(reader.GetString(2)), reader.GetString(3));
+                var product = Product.Reconstitute(reader.GetInt32(0), reader.GetString(1), Enum.Parse<Platform>(reader.GetString(2)), reader.GetString(3), reader.GetBoolean(4));
                 products.Add(product);
             }
+
             return products; 
         }
     }
