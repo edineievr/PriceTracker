@@ -14,14 +14,10 @@ namespace PriceTracker.Worker.Services
 
         public async Task ComparePricesAsync(PriceHistory newHistory, PriceHistory? oldHistory)
         {
-            if (oldHistory != null && oldHistory.Price > newHistory.Price)
+            
+            if (oldHistory is not null && oldHistory.Price > newHistory.Price)
             {
-                await _notificationService.NotifyAsync(new PriceAlert
-                {
-                    ProductDescription = newHistory.ProductDescription,
-                    Platform = newHistory.Platform,
-                    CurrentPrice = newHistory.Price,
-                });
+                await _notificationService.NotifyAsync(PriceAlert.Create(newHistory.ProductDescription, newHistory.Platform, newHistory.Price));
             }
         }
     }
