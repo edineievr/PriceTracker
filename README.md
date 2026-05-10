@@ -34,4 +34,4 @@ Queria acompanhar preços de peças para montar um PC novo, mas os scrapers exis
 
 ✅ Logs para rastreamento de falhas
 
-🔄 Alimentação automática do banco em avaliação
+✅ Alimentação automática do banco em avaliação
