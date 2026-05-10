@@ -33,8 +33,6 @@ namespace Pricetracker.Worker
 
                 var comparisonService = scope.ServiceProvider.GetRequiredService<PriceComparisonService>();
 
-                var notificationService = scope.ServiceProvider.GetRequiredService<INotificationService>();
-
                 var products = await database.GetProductsToTrack();
 
                 foreach (var product in products)
@@ -49,14 +47,7 @@ namespace Pricetracker.Worker
 
                         var oldHistory = await database.GetLastPriceHistoryAsync(product.Id);
 
-                        if (oldHistory is null)//se nao houver historico eu notifico o primeiro preço
-                        {
-                            await notificationService.NotifyAsync(PriceAlert.Create(product.Description, product.Platform, trackingResult.Price));
-                        }
-                        else
-                        {
-                            await comparisonService.ComparePricesAsync(priceHistory, oldHistory);
-                        }
+                        await comparisonService.ComparePricesAsync(priceHistory, oldHistory);
 
                         await database.InsertPriceHistoryAsync(priceHistory);
 
