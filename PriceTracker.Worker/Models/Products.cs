@@ -8,9 +8,20 @@ namespace PriceTracker.Worker.Models
         public string Description { get; private set; }
         public Platform Platform { get; private set; }
         public string Url { get; private set; }
-        public bool IsActive { get; private set; }//criado apenas para desativar uma estrategia temporariamente (meli), mas será implementado na automação da alimentação do banco
+        public bool IsActive { get; private set; }
 
-        public static Product Create(int id, string description, Platform platform, string url)
+        public static Product Create(string description, Platform platform, string url)
+        {
+            return new Product
+            {
+                Description = description,
+                Platform = platform,
+                Url = url,
+                IsActive = true
+            };
+        }
+
+        public static Product Reconstitute(int id, string description, Platform platform, string url, bool isActive)
         {
             return new Product
             {
@@ -18,6 +29,7 @@ namespace PriceTracker.Worker.Models
                 Description = description,
                 Platform = platform,
                 Url = url,
+                IsActive = isActive
             };
         }
     }
