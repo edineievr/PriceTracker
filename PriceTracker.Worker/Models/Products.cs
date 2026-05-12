@@ -10,7 +10,7 @@ namespace PriceTracker.Worker.Models
         public string Url { get; private set; }
         public bool IsActive { get; private set; }
 
-        public static Product Create(string description, Platform platform, string url)
+        public static Product Create(Platform platform, string description,  string url)
         {
             return new Product
             {
@@ -21,7 +21,7 @@ namespace PriceTracker.Worker.Models
             };
         }
 
-        public static Product Reconstitute(int id, string description, Platform platform, string url, bool isActive)
+        public static Product Reconstitute(int id, Platform platform, string description,  string url, bool isActive)
         {
             return new Product
             {

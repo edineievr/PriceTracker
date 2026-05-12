@@ -39,7 +39,10 @@ namespace PriceTracker.Worker.Infrastructure
             ProductId          INTEGER NOT NULL,
             ProductDescription TEXT NOT NULL,
             Platform           TEXT NOT NULL,
-            Price              REAL NOT NULL,
+            SpotPrice          REAL NOT NULL,            
+            CreditCardPrice    REAL,
+            CreditCardInstallment INTEGER,
+            OriginalPrice      REAL,
             RecordedAt         TEXT NOT NULL,
             FOREIGN KEY (ProductId) REFERENCES Product(Id)
         );
@@ -76,14 +79,17 @@ namespace PriceTracker.Worker.Infrastructure
             var command = connection.CreateCommand();
 
             command.CommandText = """                
-                    INSERT INTO PriceHistory (ProductId, ProductDescription, Platform, Price, RecordedAt)
-                    VALUES (@ProductId, @ProductDescription, @Platform, @Price, @RecordedAt)
+                    INSERT INTO PriceHistory (ProductId, ProductDescription, Platform, SpotPrice, RecordedAt, CreditCardPrice, CreditCardInstallment, OriginalPrice)
+                    VALUES (@ProductId, @ProductDescription, @Platform, @SpotPrice, @RecordedAt, @CreditCardPrice, @CreditCardInstallment, @OriginalPrice)
                    """;
             command.Parameters.AddWithValue("@ProductId", priceHistory.ProductId);
             command.Parameters.AddWithValue("@ProductDescription", priceHistory.ProductDescription);
             command.Parameters.AddWithValue("@Platform", priceHistory.Platform.ToString());
-            command.Parameters.AddWithValue("@Price", priceHistory.Price);
+            command.Parameters.AddWithValue("@SpotPrice", priceHistory.SpotPrice);
             command.Parameters.AddWithValue("@RecordedAt", priceHistory.RecordedAt.ToString("o"));
+            command.Parameters.AddWithValue("@CreditCardPrice", priceHistory.CreditCardPrice ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@CreditCardInstallment", priceHistory.CreditCardInstallment ?? (object)DBNull.Value);
+            command.Parameters.AddWithValue("@OriginalPrice", priceHistory.OriginalPrice ?? (object)DBNull.Value);
 
             await command.ExecuteNonQueryAsync();
         }
@@ -96,7 +102,7 @@ namespace PriceTracker.Worker.Infrastructure
             var command = connection.CreateCommand();
 
             command.CommandText = """                
-                    SELECT Id, ProductId, ProductDescription, Platform, Price, RecordedAt
+                    SELECT Id, ProductId, ProductDescription, Platform, SpotPrice, RecordedAt, CreditCardPrice, CreditCardInstallment, OriginalPrice
                     FROM PriceHistory
                     WHERE ProductId = @ProductId
                     ORDER BY RecordedAt DESC
@@ -107,7 +113,15 @@ namespace PriceTracker.Worker.Infrastructure
 
             if (reader.Read())
             {
-                var historico = PriceHistory.Reconstitute(reader.GetInt32(0), reader.GetInt32(1), reader.GetString(2), Enum.Parse<Platform>(reader.GetString(3)), reader.GetDecimal(4), DateTime.Parse(reader.GetString(5), null, DateTimeStyles.RoundtripKind));
+                var historico = PriceHistory.Reconstitute(reader.GetInt32(0), 
+                                                          reader.GetInt32(1),
+                                                          Enum.Parse<Platform>(reader.GetString(3)),
+                                                          reader.GetString(2),
+                                                          reader.GetDecimal(4), 
+                                                          reader.IsDBNull(6) ? null : reader.GetDecimal(6), 
+                                                          reader.IsDBNull(7) ? null : reader.GetInt32(7), 
+                                                          reader.IsDBNull(8) ? null : reader.GetDecimal(8),
+                                                          DateTime.Parse(reader.GetString(5), null, DateTimeStyles.RoundtripKind));
 
                 return historico;
             }
@@ -133,7 +147,7 @@ namespace PriceTracker.Worker.Infrastructure
 
             while (reader.Read())
             {
-                var product = Product.Reconstitute(reader.GetInt32(0), reader.GetString(1), Enum.Parse<Platform>(reader.GetString(2)), reader.GetString(3), reader.GetBoolean(4));
+                var product = Product.Reconstitute(reader.GetInt32(0), Enum.Parse<Platform>(reader.GetString(2)), reader.GetString(1),  reader.GetString(3), reader.GetBoolean(4));
                 products.Add(product);
             }
 
