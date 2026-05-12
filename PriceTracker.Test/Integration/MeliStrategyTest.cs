@@ -4,9 +4,10 @@ using PriceTracker.Worker.Enums;
 using Shouldly;
 using System;
 
-namespace PriceTracker.Test.Strategies
+namespace PriceTracker.Test.Integration
 {
     [TestFixture]
+    [Category("Integration")]
     public class MeliStrategyTest
     {
         private MeliStrategy _meliStrategy;
@@ -14,6 +15,7 @@ namespace PriceTracker.Test.Strategies
         [SetUp]
         public void Setup()
         {
+            DotNetEnv.Env.Load("C:\\Users\\edine\\source\\repos\\PriceTracker\\PriceTracker.Worker\\.env\"");
             var logger = new Logger<MeliStrategy>(new LoggerFactory());
             _meliStrategy = new MeliStrategy(logger);
         }
@@ -30,8 +32,11 @@ namespace PriceTracker.Test.Strategies
             // Assert
             result.ShouldNotBeNull();
             result.ProductDescription.ShouldBe("Suplemento em pó ProFit Laboratórios Anabolic Mass 28500 proteínas sabor chocolate em sachê de 3kg");
-            result.Price.ShouldBeGreaterThan(0);
+            result.SpotPrice.ShouldBeGreaterThan(0);
             result.Platform.ShouldBe(Platform.Meli);
+            result.OriginalPrice?.ShouldBeGreaterThan(0);
+            result.CreditCardPrice?.ShouldBeGreaterThan(0);
+            result.CreditCardInstallment?.ShouldBeGreaterThan(0);
         }
     }
 }

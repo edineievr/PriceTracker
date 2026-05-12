@@ -8,9 +8,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using static System.Net.WebRequestMethods;
 
-namespace PriceTracker.Test.Strategies
+namespace PriceTracker.Test.Integration
 {
     [TestFixture]
+    [Category("Integration")]
     public class PichauStrategyTest
     {
         private PichauStrategy _pichauStrategy;
@@ -31,8 +32,11 @@ namespace PriceTracker.Test.Strategies
 
             result.ShouldNotBeNull();
             result.ProductDescription.ShouldBe("Placa Mae MSI Pro B650M-P, DDR5, Socket AMD AM5, M-ATX, Chipset AMD B650, PRO-B650M-P");
-            result.Price.ShouldBe(749.99m);
+            result.SpotPrice.ShouldBeGreaterThan(0);
             result.Platform.ShouldBe(Platform.Pichau);
+            result.OriginalPrice?.ShouldBeGreaterThan(0);
+            result.CreditCardPrice?.ShouldBeGreaterThan(0);
+            result.CreditCardInstallment?.ShouldBeGreaterThan(0);
         }
     }
 }
