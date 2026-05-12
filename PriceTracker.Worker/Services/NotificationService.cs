@@ -19,12 +19,23 @@ namespace PriceTracker.Worker.Services
         }
         public async Task NotifyAsync(PriceAlert priceAlert)
         {
-            _logger.LogInformation("Enviando notificação...{productDescription}", priceAlert.ProductDescription);                 
+            _logger.LogInformation("Enviando notificação...{productDescription}", priceAlert.ProductDescription);
+
+            var precoOriginal = priceAlert.OriginalPrice.HasValue ? $"\n💸 *De:* R$ {priceAlert.OriginalPrice:N2}" : string.Empty;
+
+            var cartaoInfo = priceAlert.CreditCardPrice.HasValue && priceAlert.CreditCardInstallment.HasValue ? 
+                             $"\n💳 *Cartão:* R$ {priceAlert.CreditCardPrice:N2}\n🔢 *Parcelas:* {priceAlert.CreditCardInstallment}x sem juros" : 
+                             string.Empty;
 
             var payload = new
             {
                 chat_id = _chatId,
-                text = $"Alerta de Preço\n*{priceAlert.ProductDescription}*\n*R$ {priceAlert.CurrentPrice}*\nPlataforma: *{priceAlert.Platform}*",
+                text = $"🔔 *Alerta de Preço*\n\n" +
+                       $"📦 *Produto:* {priceAlert.ProductDescription}\n" +
+                       $"🏪 *Plataforma:* {priceAlert.Platform}" +
+                       precoOriginal +
+                       $"\n💰 *À Vista:* R$ {priceAlert.SpotPrice:N2}" +
+                       cartaoInfo,
                 parse_mode = "Markdown"
             };
 
