@@ -12,7 +12,7 @@ Queria acompanhar preços de peças para montar um PC novo, mas os scrapers exis
 - Um job consulta os produtos cadastrados periodicamente
 - A plataforma do produto define, via Factory, qual estratégia de scraping será usada
 - Após a consulta, o histórico é gravado e comparado com o registro anterior
-- Se o preço mudou, uma notificação é enviada via bot do Telegram com descrição, preço atual e plataforma
+- Se o preço mudou, uma notificação é enviada via bot do Telegram com descrição, preço à vista, preço no cartão de crédito, quantidade de parcelas sem juros e plataforma
 
 **Decisões técnicas**
 - Strategy Pattern para implementar cada estratégia separadamente, onde elas dependem somente de um contrato de interface
@@ -32,6 +32,6 @@ Queria acompanhar preços de peças para montar um PC novo, mas os scrapers exis
 
 ✅ Estratégia Pichau implementada
 
-✅ Logs para rastreamento de falhas
+✅ Logs estruturados para rastreamento de falhas sem interrupção do worker
 
-✅ Alimentação automática do banco em avaliação
+✅ Alimentação automática do banco implementada via endpoint (Postman)
