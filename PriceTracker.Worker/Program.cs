@@ -29,6 +29,7 @@ builder.Services.AddSerilog();
 builder.Services.AddScoped<MeliStrategy>();
 builder.Services.AddScoped<PichauStrategy>();
 builder.Services.AddScoped<KabumStrategy>();
+builder.Services.AddScoped<TerabyteStrategy>();
 builder.Services.AddScoped<PriceComparisonService>();
 builder.Services.AddTransient<PriceTrackerFactory>();
 builder.Services.AddScoped<INotificationService, NotificationService>();

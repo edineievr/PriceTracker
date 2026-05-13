@@ -12,6 +12,7 @@ namespace PriceTracker.Worker.Enums
 
         [Description("Pichau")]
         Pichau = 2,
+        Terabyte = 3,
         // Adicione outras plataformas conforme necessário
     }
 }
