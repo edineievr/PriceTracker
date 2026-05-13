@@ -20,7 +20,7 @@ namespace PriceTracker.Test.Services
         [Test]
         public async Task When_Notify_Should_Set_WasCalled_And_LastAlert()
         {
-            var priceAlert = PriceAlert.Create("Teste de Produto", Platform.Kabum, 99.99m, creditCardPrice: null, creditCardInstallment: null, originalPrice: null);
+            var priceAlert = PriceAlert.Create(Platform.Kabum, "Teste de Produto", 99.99m, creditCardPrice: null, creditCardInstallment: null, originalPrice: null);
 
             await _service.NotifyAsync(priceAlert);
 

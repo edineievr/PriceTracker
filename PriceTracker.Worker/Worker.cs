@@ -43,7 +43,7 @@ namespace Pricetracker.Worker
 
                         var trackingResult = await strategy.ExtractPriceAsync(product.Url);
 
-                        var priceHistory = PriceHistory.Create(product.Id, product.Description, product.Platform, trackingResult.Price);
+                        var priceHistory = PriceHistory.Create(product.Id, product.Platform, product.Description, trackingResult.SpotPrice, trackingResult.CreditCardPrice, trackingResult.CreditCardInstallment, trackingResult.OriginalPrice);
 
                         var oldHistory = await database.GetLastPriceHistoryAsync(product.Id);
 

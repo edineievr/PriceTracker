@@ -33,7 +33,7 @@ namespace PriceTracker.Test.Integration
         public async Task Notify_Should_Send_Notification()
         {
             // Arrange
-            var priceAlert = PriceAlert.Create("Teste de Produto", Platform.Kabum, 99.99m, creditCardPrice: 120.00m, creditCardInstallment: 10, originalPrice: 150.00m);
+            var priceAlert = PriceAlert.Create(Platform.Kabum, "Teste de Produto",  99.99m, creditCardPrice: 120.00m, creditCardInstallment: 10, originalPrice: 150.00m);
             // Act
             await _service.NotifyAsync(priceAlert);
 

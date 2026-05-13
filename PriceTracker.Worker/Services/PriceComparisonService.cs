@@ -15,9 +15,9 @@ namespace PriceTracker.Worker.Services
         public async Task ComparePricesAsync(PriceHistory newHistory, PriceHistory? oldHistory)
         {
             
-            if (oldHistory is not null && oldHistory.Price > newHistory.Price)
+            if (oldHistory is not null && oldHistory.SpotPrice > newHistory.SpotPrice)
             {
-                await _notificationService.NotifyAsync(PriceAlert.Create(newHistory.ProductDescription, newHistory.Platform, newHistory.Price));
+                await _notificationService.NotifyAsync(PriceAlert.Create(newHistory.Platform, newHistory.ProductDescription,  newHistory.SpotPrice, newHistory.CreditCardPrice, newHistory.CreditCardInstallment, newHistory.OriginalPrice));
             }
         }
     }

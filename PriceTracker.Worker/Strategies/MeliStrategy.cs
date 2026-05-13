@@ -3,6 +3,7 @@ using Microsoft.Playwright;
 using PriceTracker.Worker.DTOs;
 using PriceTracker.Worker.Enums;
 using PriceTracker.Worker.Intefaces;
+using Superpower.Model;
 using System.Globalization;
 
 namespace PriceTracker.Worker.Strategies
@@ -10,6 +11,8 @@ namespace PriceTracker.Worker.Strategies
     public class MeliStrategy : IPriceScraper
     {
         private readonly ILogger<MeliStrategy> _logger;
+        private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
+        private static readonly NumberStyles CurrencyStyle = NumberStyles.Currency;
 
         public MeliStrategy(ILogger<MeliStrategy> logger)
         {
@@ -31,23 +34,72 @@ namespace PriceTracker.Worker.Strategies
 
                 await page.GotoAsync(url, new() { WaitUntil = WaitUntilState.DOMContentLoaded });
 
-                // og:title vem como "Produto X - R$ 419,99", então separei pelo " - R$ "
                 var ogTitle = await page.Locator("meta[property='og:title']").GetAttributeAsync("content") ?? throw new Exception("Não foi possível extrair o título do produto.");
 
                 var parts = ogTitle.Split(" - R$ ");
-
                 var title = parts[0].Trim();
                 var priceText = parts.Length > 1 ? parts[1].Trim() : throw new Exception("Não foi possível extrair o preço do produto.");
 
-                if (!decimal.TryParse(priceText, NumberStyles.Currency, CultureInfo.GetCultureInfo("pt-BR"), out decimal price))
+                if (!decimal.TryParse(priceText, CurrencyStyle, PtBr, out decimal price))
                     throw new Exception("Não foi possível converter o preço do produto.");
 
-                return new ProductTrackingResult
+                var result = new ProductTrackingResult
                 {
                     Platform = Platform.Meli,
                     ProductDescription = title,
-                    Price = price
+                    SpotPrice = price
                 };
+
+                // preço original
+                try
+                {
+                    await page.WaitForSelectorAsync("span.ui-pdp-price__part__container", new() { Timeout = 5000 });
+                    var originalPriceElement = await page.QuerySelectorAsync("span.ui-pdp-price__part__container");
+
+                    if (originalPriceElement != null)
+                    {
+                        var originalPriceText = await originalPriceElement.TextContentAsync();
+                        originalPriceText = originalPriceText?.Replace("R$", "").Replace(".", "").Trim();
+
+                        if (decimal.TryParse(originalPriceText, CurrencyStyle, PtBr, out decimal originalPrice))
+                            result.OriginalPrice = originalPrice;
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Preço original não encontrado para o produto no Meli. URL: {Url}", url);
+                }
+
+                // preço e parcelas no cartão
+                try
+                {
+                    await page.WaitForSelectorAsync("div.ui-pdp-price__subtitles", new() { Timeout = 5000 });
+                    var subtitlesElement = await page.QuerySelectorAsync("div.ui-pdp-price__subtitles");
+
+                    if (subtitlesElement != null)
+                    {
+                        var subtitlesText = await subtitlesElement.TextContentAsync();
+                        var numbers = subtitlesText?.Split('x');
+
+                        if (numbers?.Length >= 2)
+                        {
+                            var installments = int.Parse(new string(numbers[0].Where(char.IsDigit).ToArray()));
+                            var installmentPriceText = numbers[1].Replace("R$", "").Trim();
+
+                            if (decimal.TryParse(installmentPriceText, CurrencyStyle, PtBr, out decimal installmentPrice))
+                            {
+                                result.CreditCardPrice = installmentPrice * installments;
+                                result.CreditCardInstallment = installments;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Informações de parcelamento não encontradas para o produto no Meli. URL: {Url}", url);
+                }
+
+                return result;
             }
             catch (Exception ex)
             {
