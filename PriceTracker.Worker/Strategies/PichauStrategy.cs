@@ -13,6 +13,8 @@ namespace PriceTracker.Worker.Strategies
     public class PichauStrategy : IPriceScraper
     {
         private readonly ILogger<PichauStrategy> _logger;
+        private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
+        private static readonly NumberStyles CurrencyStyle = NumberStyles.Currency;
 
         public PichauStrategy(ILogger<PichauStrategy> logger)
         {
@@ -21,7 +23,7 @@ namespace PriceTracker.Worker.Strategies
         public async Task<ProductTrackingResult> ExtractPriceAsync(string url)
         {
             try
-            {                
+            {
                 using var playwright = await Playwright.CreateAsync();
 
                 await using var browser = await playwright.Chromium.LaunchAsync(new() { Headless = true });
@@ -36,22 +38,72 @@ namespace PriceTracker.Worker.Strategies
                 // Navega até a URL e espera o HTML inicial carregar
                 // DOMContentLoaded é suficiente pq os meta tags chegam no HTML, antes do JS rodar
                 await page.GotoAsync(url, new() { WaitUntil = WaitUntilState.DOMContentLoaded });
-                
+
                 var title = await page.Locator("meta[property='og:title']").GetAttributeAsync("content") ?? throw new Exception("Não foi possível extrair o título do produto.");
-                
+
                 var priceText = await page.Locator("meta[name='product:price:amount']").GetAttributeAsync("content") ?? throw new Exception("Não foi possível extrair o preço do produto.");
-                
+
                 priceText = priceText.Replace("R$", "").Trim();
 
-                if (!decimal.TryParse(priceText, NumberStyles.Currency, CultureInfo.InvariantCulture, out decimal price))
+                if (!decimal.TryParse(priceText, CurrencyStyle, PtBr, out decimal price))
                     throw new Exception("Não foi possível converter o preço do produto.");
 
-                return new ProductTrackingResult
+                var result = new ProductTrackingResult
                 {
                     Platform = Platform.Pichau,
                     ProductDescription = title.Replace("| Pichau", "").Trim(),
-                    Price = price
+                    SpotPrice = price
                 };
+
+                // preço original
+                try
+                {
+                    await page.WaitForSelectorAsync("span.mui-3ij2mi-strikeThrough", new() { Timeout = 5000 });
+                    var originalPriceElement = await page.QuerySelectorAsync("span.mui-3ij2mi-strikeThrough");
+
+                    if (originalPriceElement != null)
+                    {
+                        var originalPriceText = (await originalPriceElement.TextContentAsync())?.Replace("R$", "").Trim();
+
+                        if (decimal.TryParse(originalPriceText, CurrencyStyle, PtBr, out decimal originalPrice))
+                            result.OriginalPrice = originalPrice;
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Preço original não encontrado na Pichau. URL: {url}", url);
+                }
+
+                // parcelas
+                try
+                {
+                    await page.WaitForSelectorAsync("div.mui-1oz0vcv-installment", new() { Timeout = 5000 });
+                    var installmentsElement = await page.QuerySelectorAsync("div.mui-1oz0vcv-installment");
+
+                    if (installmentsElement != null)
+                    {
+                        var text = await installmentsElement.TextContentAsync();
+                        var numbers = text?.Split('x');
+
+                        if (numbers?.Length >= 2)
+                        {
+                            var installments = int.Parse(new string(numbers[0].Where(char.IsDigit).ToArray()));
+                            var installmentPriceText = numbers[1].Replace("R$", "").Replace("de", "").Trim();
+
+                            if (decimal.TryParse(installmentPriceText, CurrencyStyle, PtBr, out decimal installmentPrice))
+                            {
+                                result.CreditCardPrice = installmentPrice * installments;
+                                result.CreditCardInstallment = installments;
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    _logger.LogWarning("Parcelas não encontradas na Pichau. URL: {url}", url);
+                }
+
+                return result;
             }
             catch (Exception ex)
             {

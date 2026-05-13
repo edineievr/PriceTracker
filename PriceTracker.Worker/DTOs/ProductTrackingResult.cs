@@ -6,7 +6,11 @@ namespace PriceTracker.Worker.DTOs
     {
         public string ProductDescription { get; set; }
         public Platform Platform { get; set; } 
-        public decimal Price { get; set; }
+        public decimal SpotPrice { get; set; }
+        public decimal? CreditCardPrice { get; set; }
+        public decimal? OriginalPrice { get; set; }
+        public int? CreditCardInstallment { get; set; }
+
 
         public ProductTrackingResult()
         {

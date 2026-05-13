@@ -6,15 +6,21 @@ namespace PriceTracker.Worker.Models
     {
         public string ProductDescription { get; private set; }
         public Platform Platform { get; private set; }
-        public decimal CurrentPrice { get; private set; }
+        public decimal? OriginalPrice { get; private set; }
+        public decimal SpotPrice { get; private set; }
+        public decimal? CreditCardPrice { get; private set; }
+        public int? CreditCardInstallment { get; private set; }
 
-        public static PriceAlert Create(string productDescription, Platform platform, decimal currentPrice)
+        public static PriceAlert Create(Platform platform, string productDescription, decimal spotPrice, decimal? creditCardPrice, int? creditCardInstallment, decimal? originalPrice)
         {
             return new PriceAlert
             {
                 ProductDescription = productDescription,
                 Platform = platform,
-                CurrentPrice = currentPrice
+                SpotPrice = spotPrice,
+                CreditCardPrice = creditCardPrice,
+                CreditCardInstallment = creditCardInstallment,
+                OriginalPrice = originalPrice
             };
         }
     }

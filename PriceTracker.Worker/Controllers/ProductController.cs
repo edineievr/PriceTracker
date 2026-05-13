@@ -15,7 +15,7 @@ namespace PriceTracker.Worker.Controllers
         [HttpPost]
         public async Task<IActionResult> InsertProduct([FromBody] AddProductRequest request)
         {
-            var product = Product.Create(request.Description, request.Platform, request.Url);
+            var product = Product.Create(request.Platform, request.Description, request.Url);
 
             await _database.InsertProductAsync(product);
 
