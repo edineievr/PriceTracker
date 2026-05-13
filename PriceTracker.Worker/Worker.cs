@@ -53,7 +53,7 @@ namespace Pricetracker.Worker
 
                         _logger.LogInformation("Produto consultado: {productDescription} - Plataforma: {platform}", product.Description, product.Platform);
 
-                        await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
+                        await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
 
                     }
                     catch (Exception ex)

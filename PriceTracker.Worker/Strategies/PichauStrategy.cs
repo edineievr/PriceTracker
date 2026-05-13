@@ -13,7 +13,7 @@ namespace PriceTracker.Worker.Strategies
     public class PichauStrategy : IPriceScraper
     {
         private readonly ILogger<PichauStrategy> _logger;
-        private static readonly CultureInfo PtBr = CultureInfo.GetCultureInfo("pt-BR");
+        private static readonly CultureInfo culture = CultureInfo.InvariantCulture;
         private static readonly NumberStyles CurrencyStyle = NumberStyles.Currency;
 
         public PichauStrategy(ILogger<PichauStrategy> logger)
@@ -45,7 +45,7 @@ namespace PriceTracker.Worker.Strategies
 
                 priceText = priceText.Replace("R$", "").Trim();
 
-                if (!decimal.TryParse(priceText, CurrencyStyle, PtBr, out decimal price))
+                if (!decimal.TryParse(priceText, CurrencyStyle, culture, out decimal price))
                     throw new Exception("Não foi possível converter o preço do produto.");
 
                 var result = new ProductTrackingResult
@@ -65,7 +65,7 @@ namespace PriceTracker.Worker.Strategies
                     {
                         var originalPriceText = (await originalPriceElement.TextContentAsync())?.Replace("R$", "").Trim();
 
-                        if (decimal.TryParse(originalPriceText, CurrencyStyle, PtBr, out decimal originalPrice))
+                        if (decimal.TryParse(originalPriceText, CurrencyStyle, culture, out decimal originalPrice))
                             result.OriginalPrice = originalPrice;
                     }
                 }
@@ -90,7 +90,7 @@ namespace PriceTracker.Worker.Strategies
                             var installments = int.Parse(new string(numbers[0].Where(char.IsDigit).ToArray()));
                             var installmentPriceText = numbers[1].Replace("R$", "").Replace("de", "").Trim();
 
-                            if (decimal.TryParse(installmentPriceText, CurrencyStyle, PtBr, out decimal installmentPrice))
+                            if (decimal.TryParse(installmentPriceText, CurrencyStyle, culture, out decimal installmentPrice))
                             {
                                 result.CreditCardPrice = installmentPrice * installments;
                                 result.CreditCardInstallment = installments;
