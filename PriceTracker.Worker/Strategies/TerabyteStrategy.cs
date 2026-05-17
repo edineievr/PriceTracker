@@ -17,7 +17,7 @@ namespace PriceTracker.Worker.Strategies
             _logger = logger;
         }
 
-        public async Task<ProductTrackingResult> ExtractPriceAsync(string url)
+        public async Task<ProductTrackingResult> ExtractPriceAsync(string url, CancellationToken stoppingToken)
         {
             try
             {
@@ -36,18 +36,18 @@ namespace PriceTracker.Worker.Strategies
                 await page.WaitForSelectorAsync("h1.tit-prod", new() { Timeout = 5000 });
                 var titleElement = await page.Locator("h1.tit-prod").First.TextContentAsync();
 
-                var title = !string.IsNullOrEmpty(titleElement) ? titleElement.Trim() : 
-                            await page.Locator("meta[property='og:title']").GetAttributeAsync("content") ?? 
+                var title = !string.IsNullOrEmpty(titleElement) ? titleElement.Trim() :
+                            await page.Locator("meta[property='og:title']").GetAttributeAsync("content") ??
                             throw new Exception("Não foi possível extrair o título do produto.");
 
                 // preço à vista — id estável, mais resiliente que classe
-                await page.WaitForSelectorAsync("#valVista", new() { Timeout = 5000 });
+                await page.WaitForSelectorAsync("p#valVista.val-prod.valVista", new() { Timeout = 5000 });
 
-                var spotPriceText = await page.Locator("#valVista").First.TextContentAsync() ?? throw new Exception("Não foi possível extrair o preço à vista.");
+                var spotPriceText = await page.Locator("p#valVista.val-prod.valVista").First.TextContentAsync() ?? throw new Exception("Não foi possível extrair o preço à vista.");
 
-                spotPriceText = spotPriceText.Replace("R$", "").Replace(".", "").Trim();
+                spotPriceText = spotPriceText.Replace("R$", "").Replace(".", "").Replace(",", ".").Trim();
 
-                if (!decimal.TryParse(spotPriceText, _currencyStyle, _culture, out decimal spotPrice))
+                if (!decimal.TryParse(spotPriceText, _currencyStyle, CultureInfo.InvariantCulture, out decimal spotPrice))
                     throw new Exception("Não foi possível converter o preço à vista.");
 
                 var result = new ProductTrackingResult
@@ -61,37 +61,42 @@ namespace PriceTracker.Worker.Strategies
                 try
                 {
                     await page.WaitForSelectorAsync("p.precode del", new() { Timeout = 5000 });
-                    var originalPriceText = await page.Locator("p.precode del").TextContentAsync();
-                    originalPriceText = originalPriceText?.Replace("R$", "").Replace(".", "").Trim();
+                    var originalPriceText = await page.Locator("p.precode del").First.TextContentAsync();
+                    originalPriceText = originalPriceText?.Replace("R$", "").Replace(".", "").Replace(",", ".").Trim();
 
                     if (decimal.TryParse(originalPriceText, _currencyStyle, _culture, out decimal originalPrice))
                         result.OriginalPrice = originalPrice;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    _logger.LogWarning("Preço original não encontrado na Terabyte. URL: {url}", url);
+                    _logger.LogWarning(ex, "Preço original não encontrado na Terabyte. URL: {url}", url);
+                }
+
+                // preço cartão
+                try
+                {
+                    var creditCardPriceText = await page.Locator("span#valParc").First.TextContentAsync(new() { Timeout = 5000 });
+                    creditCardPriceText = creditCardPriceText?.Replace("R$", "").Replace(".", "").Replace(",", ".").Trim();
+
+                    if (decimal.TryParse(creditCardPriceText, _currencyStyle, _culture, out decimal creditCardPrice))
+                        result.CreditCardPrice = creditCardPrice;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Preço no cartão de crédito não encontrado na Terabyte. URL: {url}", url);
                 }
 
                 // parcelas
                 try
                 {
-                    await page.WaitForSelectorAsync("#valParc", new() { Timeout = 5000 });
-
-                    var installmentPriceText = await page.Locator("#valParc").TextContentAsync();
-                    var installmentsText = await page.Locator("#nParc").TextContentAsync();
-
-                    installmentPriceText = installmentPriceText?.Replace("R$", "").Replace(".", "").Trim();
+                    var installmentsText = await page.Locator("span#nParc").First.TextContentAsync(new() { Timeout = 5000 });
                     var installments = int.Parse(new string(installmentsText?.Where(char.IsDigit).ToArray()));
 
-                    if (decimal.TryParse(installmentPriceText, _currencyStyle, _culture, out decimal installmentPrice))
-                    {
-                        result.CreditCardPrice = installmentPrice * installments;
-                        result.CreditCardInstallment = installments;
-                    }
+                    result.CreditCardInstallment = installments;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    _logger.LogWarning("Parcelas não encontradas na Terabyte. URL: {url}", url);
+                    _logger.LogWarning(ex, "Parcelas não encontradas na Terabyte. URL: {url}", url);
                 }
 
                 return result;
