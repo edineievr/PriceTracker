@@ -13,11 +13,11 @@ namespace PriceTracker.Worker.Controllers
         private readonly Database _database = database;
 
         [HttpPost]
-        public async Task<IActionResult> InsertProduct([FromBody] AddProductRequest request)
+        public async Task<IActionResult> InsertProduct([FromBody] AddProductRequest request, CancellationToken stoppingToken)
         {
             var product = Product.Create(request.Platform, request.Description, request.Url);
 
-            await _database.InsertProductAsync(product);
+            await _database.InsertProductAsync(product, stoppingToken);
 
             return Created();
         }

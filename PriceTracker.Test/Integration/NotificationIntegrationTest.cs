@@ -35,7 +35,7 @@ namespace PriceTracker.Test.Integration
             // Arrange
             var priceAlert = PriceAlert.Create(Platform.Kabum, "Teste de Produto",  99.99m, creditCardPrice: 120.00m, creditCardInstallment: 10, originalPrice: 150.00m);
             // Act
-            await _service.NotifyAsync(priceAlert);
+            await _service.NotifyAsync(priceAlert, CancellationToken.None);
 
             Assert.Pass("Notification sent successfully.");
         }

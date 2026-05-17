@@ -17,7 +17,7 @@ namespace PriceTracker.Worker.Strategies
             _logger = logger;
         }
 
-        public async Task<ProductTrackingResult> ExtractPriceAsync(string url)
+        public async Task<ProductTrackingResult> ExtractPriceAsync(string url, CancellationToken stoppingToken)
         {
             try
             {

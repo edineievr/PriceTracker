@@ -19,7 +19,7 @@ namespace PriceTracker.Worker.Strategies
             _logger = logger;
         }
 
-        public async Task<ProductTrackingResult> ExtractPriceAsync(string url)
+        public async Task<ProductTrackingResult> ExtractPriceAsync(string url, CancellationToken stoppingToken)
         {
             try
             {
@@ -34,7 +34,7 @@ namespace PriceTracker.Worker.Strategies
 
                 await page.GotoAsync(url, new() { WaitUntil = WaitUntilState.DOMContentLoaded });
 
-                var ogTitle = await page.Locator("meta[property='og:title']").GetAttributeAsync("content") ?? throw new Exception("Não foi possível extrair o título do produto.");
+                var ogTitle = await page.Locator("meta[property='twitter:title']").GetAttributeAsync("content") ?? throw new Exception("Não foi possível extrair o título do produto.");
 
                 var parts = ogTitle.Split(" - R$ ");
                 var title = parts[0].Trim();

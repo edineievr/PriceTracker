@@ -27,7 +27,7 @@ namespace PriceTracker.Test.Integration
             string url = "https://www.mercadolivre.com.br/suplemento-em-po-profit-laboratorios-anabolic-mass-28500-proteinas-sabor-chocolate-em-sach-de-3kg/p/MLB12406685?product_trigger_id=MLB27946823&pdp_filters=item_id%3AMLB3876921465&applied_product_filters=MLB27946823&picker=true&quantity=1";
 
             // Act
-            var result = await _meliStrategy.ExtractPriceAsync(url);
+            var result = await _meliStrategy.ExtractPriceAsync(url, CancellationToken.None);
 
             // Assert
             result.ShouldNotBeNull();

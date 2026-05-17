@@ -40,7 +40,7 @@ var app = builder.Build();
 
 var db = app.Services.GetRequiredService<Database>();
 
-await db.InitializeAsync();
+await db.InitializeAsync(app.Lifetime.ApplicationStopping);
 
 app.MapControllers();
 

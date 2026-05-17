@@ -28,7 +28,7 @@ namespace PriceTracker.Test.Integration
             string url = "https://www.kabum.com.br/produto/426262/processador-amd-ryzen-7-7800x3d-5-0ghz-max-turbo-cache-104mb-am5-8-nucleos-video-integrado-100-100000910wof";
             
             // Act
-            var result = await _kabumStrategy.ExtractPriceAsync(url);
+            var result = await _kabumStrategy.ExtractPriceAsync(url, CancellationToken.None);
             
             // Assert
             result.ShouldNotBeNull();
@@ -44,7 +44,7 @@ namespace PriceTracker.Test.Integration
             string url = "https://www.kabum.com.br/produto/426262/processador-amd-ryzen-7-7800x3d-5-0ghz-max-turbo-cache-104mb-am5-8-nucleos-video-integrado-100-100000910wof";
             
             // Act
-            var result = await _kabumStrategy.ExtractPriceAsync(url);
+            var result = await _kabumStrategy.ExtractPriceAsync(url, CancellationToken.None);
             
             // Assert
             result.ShouldNotBeNull();

@@ -12,12 +12,12 @@ namespace PriceTracker.Worker.Services
             _notificationService = notificationService;
         }
 
-        public async Task ComparePricesAsync(PriceHistory newHistory, PriceHistory? oldHistory)
+        public async Task ComparePricesAsync(PriceHistory newHistory, PriceHistory? oldHistory, CancellationToken stoppingToken)
         {
             
             if (oldHistory is not null && oldHistory.SpotPrice > newHistory.SpotPrice)
             {
-                await _notificationService.NotifyAsync(PriceAlert.Create(newHistory.Platform, newHistory.ProductDescription,  newHistory.SpotPrice, newHistory.CreditCardPrice, newHistory.CreditCardInstallment, newHistory.OriginalPrice));
+                await _notificationService.NotifyAsync(PriceAlert.Create(newHistory.Platform, newHistory.ProductDescription,  newHistory.SpotPrice, newHistory.CreditCardPrice, newHistory.CreditCardInstallment, newHistory.OriginalPrice), stoppingToken);
             }
         }
     }

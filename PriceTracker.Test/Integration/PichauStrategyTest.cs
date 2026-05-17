@@ -28,7 +28,7 @@ namespace PriceTracker.Test.Integration
         {
             string url = "https://www.pichau.com.br/placa-mae-msi-pro-b650m-p-ddr5-socket-amd-am5-m-atx-chipset-amd-b650-pro-b650m-p";
 
-            var result = await _pichauStrategy.ExtractPriceAsync(url);
+            var result = await _pichauStrategy.ExtractPriceAsync(url, CancellationToken.None);
 
             result.ShouldNotBeNull();
             result.ProductDescription.ShouldBe("Placa Mae MSI Pro B650M-P, DDR5, Socket AMD AM5, M-ATX, Chipset AMD B650, PRO-B650M-P");
