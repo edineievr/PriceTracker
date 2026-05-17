@@ -14,15 +14,15 @@ namespace PriceTracker.Worker.Infrastructure
             _connectionString = connectionString;
         }
 
-        public async Task InitializeAsync()
+        public async Task InitializeAsync(CancellationToken stoppingToken)
         {
             using var connection = new SqliteConnection(_connectionString);
 
-            await connection.OpenAsync();
+            await connection.OpenAsync(stoppingToken);
 
             var walCommand = connection.CreateCommand();
             walCommand.CommandText = "PRAGMA journal_mode=WAL;";
-            await walCommand.ExecuteNonQueryAsync();
+            await walCommand.ExecuteNonQueryAsync(stoppingToken);
 
             var command = connection.CreateCommand();
             command.CommandText = """
@@ -48,14 +48,14 @@ namespace PriceTracker.Worker.Infrastructure
         );
         """;
 
-            await command.ExecuteNonQueryAsync();
+            await command.ExecuteNonQueryAsync(stoppingToken);
         }
 
-        public async Task InsertProductAsync(Product product)
+        public async Task InsertProductAsync(Product product, CancellationToken stoppingToken)
         {
             using var connection = new SqliteConnection(_connectionString);
 
-            await connection.OpenAsync();
+            await connection.OpenAsync(stoppingToken);
 
             var command = connection.CreateCommand();
 
@@ -68,14 +68,14 @@ namespace PriceTracker.Worker.Infrastructure
             command.Parameters.AddWithValue("@Url", product.Url);
             command.Parameters.AddWithValue("@IsActive", product.IsActive);
 
-            await command.ExecuteNonQueryAsync();
+            await command.ExecuteNonQueryAsync(stoppingToken);
         }
 
-        public async Task InsertPriceHistoryAsync(PriceHistory priceHistory)
+        public async Task InsertPriceHistoryAsync(PriceHistory priceHistory, CancellationToken stoppingToken)
         {
             using var connection = new SqliteConnection(_connectionString);
 
-            await connection.OpenAsync();
+            await connection.OpenAsync(stoppingToken);
             var command = connection.CreateCommand();
 
             command.CommandText = """                
@@ -91,14 +91,14 @@ namespace PriceTracker.Worker.Infrastructure
             command.Parameters.AddWithValue("@CreditCardInstallment", priceHistory.CreditCardInstallment ?? (object)DBNull.Value);
             command.Parameters.AddWithValue("@OriginalPrice", priceHistory.OriginalPrice ?? (object)DBNull.Value);
 
-            await command.ExecuteNonQueryAsync();
+            await command.ExecuteNonQueryAsync(stoppingToken);
         }
 
-        public async Task<PriceHistory?> GetLastPriceHistoryAsync(int productId)
+        public async Task<PriceHistory?> GetLastPriceHistoryAsync(int productId, CancellationToken stoppingToken)
         {
             using var connection = new SqliteConnection(_connectionString);
 
-            await connection.OpenAsync();
+            await connection.OpenAsync(stoppingToken);
             var command = connection.CreateCommand();
 
             command.CommandText = """                
@@ -109,7 +109,7 @@ namespace PriceTracker.Worker.Infrastructure
                     LIMIT 1
                    """;
             command.Parameters.AddWithValue("@ProductId", productId);
-            using var reader = await command.ExecuteReaderAsync();
+            using var reader = await command.ExecuteReaderAsync(stoppingToken);
 
             if (reader.Read())
             {
@@ -129,11 +129,11 @@ namespace PriceTracker.Worker.Infrastructure
             return null;
         }
 
-        public async Task<List<Product>> GetProductsToTrack()
+        public async Task<List<Product>> GetProductsToTrack(CancellationToken stoppingToken)
         {
             using var connection = new SqliteConnection(_connectionString);
 
-            await connection.OpenAsync();
+            await connection.OpenAsync(stoppingToken);
             var command = connection.CreateCommand();
 
             command.CommandText = """                
@@ -141,7 +141,7 @@ namespace PriceTracker.Worker.Infrastructure
                     FROM Product
                     WHERE IsActive = 1
                    """;
-            using var reader = await command.ExecuteReaderAsync();
+            using var reader = await command.ExecuteReaderAsync(stoppingToken);
 
             var products = new List<Product>();
 

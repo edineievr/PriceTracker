@@ -11,6 +11,12 @@
 	</ItemGroup>
 
   <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+      <_Parameter1>PriceTracker.Test</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.4.0" />
     <PackageReference Include="DotNetEnv" Version="3.2.0" />   
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.7" />

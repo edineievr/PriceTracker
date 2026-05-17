@@ -33,7 +33,17 @@ namespace Pricetracker.Worker
 
                 var comparisonService = scope.ServiceProvider.GetRequiredService<PriceComparisonService>();
 
-                var products = await database.GetProductsToTrack();
+                List<Product> products;
+
+                try
+                {
+                    products = await database.GetProductsToTrack(stoppingToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Erro ao consultar produtos - {dateTime}", DateTime.Now.ToString("dd/MM/yyyy - HH:mm"));
+                    continue;
+                }
 
                 foreach (var product in products)
                 {
@@ -41,15 +51,15 @@ namespace Pricetracker.Worker
                     {
                         var strategy = factory.GetStrategy(product.Platform);
 
-                        var trackingResult = await strategy.ExtractPriceAsync(product.Url);
+                        var trackingResult = await strategy.ExtractPriceAsync(product.Url, stoppingToken);
 
                         var priceHistory = PriceHistory.Create(product.Id, product.Platform, product.Description, trackingResult.SpotPrice, trackingResult.CreditCardPrice, trackingResult.CreditCardInstallment, trackingResult.OriginalPrice);
 
-                        var oldHistory = await database.GetLastPriceHistoryAsync(product.Id);
+                        var oldHistory = await database.GetLastPriceHistoryAsync(product.Id, stoppingToken);//trazer pra memoria o ultimo registro de historico de cada produto na lista e evitar bater no banco toda vez pra buscar o ultimo registro (N + 1)
 
-                        await comparisonService.ComparePricesAsync(priceHistory, oldHistory);
+                        await comparisonService.ComparePricesAsync(priceHistory, oldHistory, stoppingToken);
 
-                        await database.InsertPriceHistoryAsync(priceHistory);
+                        await database.InsertPriceHistoryAsync(priceHistory, stoppingToken);
 
                         _logger.LogInformation("Produto consultado: {productDescription} - Plataforma: {platform}", product.Description, product.Platform);
 

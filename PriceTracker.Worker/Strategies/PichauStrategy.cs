@@ -20,7 +20,7 @@ namespace PriceTracker.Worker.Strategies
         {
             _logger = logger;
         }
-        public async Task<ProductTrackingResult> ExtractPriceAsync(string url)
+        public async Task<ProductTrackingResult> ExtractPriceAsync(string url, CancellationToken stoppingToken)
         {
             try
             {
@@ -77,8 +77,8 @@ namespace PriceTracker.Worker.Strategies
                 // parcelas
                 try
                 {
-                    await page.WaitForSelectorAsync("div.mui-1oz0vcv-installment", new() { Timeout = 5000 });
-                    var installmentsElement = await page.QuerySelectorAsync("div.mui-1oz0vcv-installment");
+                    await page.WaitForSelectorAsync("span.mui-1uize63-price_parcelado_text", new() { Timeout = 5000 });
+                    var installmentsElement = await page.QuerySelectorAsync("span.mui-1uize63-price_parcelado_text");
 
                     if (installmentsElement != null)
                     {

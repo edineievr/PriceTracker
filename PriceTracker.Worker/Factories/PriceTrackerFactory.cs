@@ -19,6 +19,7 @@ namespace PriceTracker.Worker.Factories
                 Platform.Meli => _serviceProvider.GetRequiredService<MeliStrategy>(),
                 Platform.Kabum => _serviceProvider.GetRequiredService<KabumStrategy>(),
                 Platform.Pichau => _serviceProvider.GetRequiredService<PichauStrategy>(),
+                Platform.Terabyte => _serviceProvider.GetRequiredService<TerabyteStrategy>(),
                 _ => throw new NotSupportedException($"Plataforma '{platform}' não suportada.")
             };
         }

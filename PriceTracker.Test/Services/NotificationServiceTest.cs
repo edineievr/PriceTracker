@@ -22,7 +22,7 @@ namespace PriceTracker.Test.Services
         {
             var priceAlert = PriceAlert.Create(Platform.Kabum, "Teste de Produto", 99.99m, creditCardPrice: null, creditCardInstallment: null, originalPrice: null);
 
-            await _service.NotifyAsync(priceAlert);
+            await _service.NotifyAsync(priceAlert, CancellationToken.None);
 
             var fake = (FakeNotificationService)_service;
 

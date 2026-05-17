@@ -26,7 +26,7 @@ namespace PriceTracker.Test.Services
             var newHistory = PriceHistory.Reconstitute(id: 2, productId: 1, description: "Teste de Produto", platform: Platform.Kabum, spotPrice: 90.00m, creditCardPrice: null, creditCardInstallment: null, originalPrice: 110.00m, recordedAt: DateTime.UtcNow);
 
             // Act & Assert
-            Assert.DoesNotThrowAsync(() => _service.ComparePricesAsync(newHistory, oldHistory));
+            Assert.DoesNotThrowAsync(() => _service.ComparePricesAsync(newHistory, oldHistory, CancellationToken.None));
             _fakeNotificationService.WasCalled.ShouldBeTrue();
             _fakeNotificationService.LastAlert?.SpotPrice.ShouldBe(90.00m);
         }
