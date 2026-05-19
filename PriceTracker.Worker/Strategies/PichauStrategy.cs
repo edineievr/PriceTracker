@@ -58,7 +58,7 @@ namespace PriceTracker.Worker.Strategies
                 // preço original
                 try
                 {
-                    await page.WaitForSelectorAsync("span.mui-3ij2mi-strikeThrough", new() { Timeout = 5000 });
+                    await page.WaitForSelectorAsync("div.mui-qw3ga7-price_from", new() { Timeout = 5000 });
                     var originalPriceElement = await page.QuerySelectorAsync("span.mui-3ij2mi-strikeThrough");
 
                     if (originalPriceElement != null)
@@ -77,8 +77,8 @@ namespace PriceTracker.Worker.Strategies
                 // parcelas
                 try
                 {
-                    await page.WaitForSelectorAsync("span.mui-1uize63-price_parcelado_text", new() { Timeout = 5000 });
-                    var installmentsElement = await page.QuerySelectorAsync("span.mui-1uize63-price_parcelado_text");
+                    await page.WaitForSelectorAsync("p.MuiTypography-root.MuiTypography-body1.mui-r6p9mf-text-smallText", new() { Timeout = 5000 });
+                    var installmentsElement = await page.QuerySelectorAsync("p.MuiTypography-root.MuiTypography-body1.mui-r6p9mf-text-smallText");
 
                     if (installmentsElement != null)
                     {

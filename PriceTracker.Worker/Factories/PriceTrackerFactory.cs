@@ -16,7 +16,6 @@ namespace PriceTracker.Worker.Factories
         {
             return platform switch
             {
-                Platform.Meli => _serviceProvider.GetRequiredService<MeliStrategy>(),
                 Platform.Kabum => _serviceProvider.GetRequiredService<KabumStrategy>(),
                 Platform.Pichau => _serviceProvider.GetRequiredService<PichauStrategy>(),
                 Platform.Terabyte => _serviceProvider.GetRequiredService<TerabyteStrategy>(),

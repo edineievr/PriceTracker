@@ -25,8 +25,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 builder.Services.AddHostedService<Worker>();
-builder.Services.AddSerilog();
-builder.Services.AddScoped<MeliStrategy>();
 builder.Services.AddScoped<PichauStrategy>();
 builder.Services.AddScoped<KabumStrategy>();
 builder.Services.AddScoped<TerabyteStrategy>();
@@ -40,9 +38,23 @@ var app = builder.Build();
 
 var db = app.Services.GetRequiredService<Database>();
 
-await db.InitializeAsync(app.Lifetime.ApplicationStopping);
+await db.InitializeAsync(app.Lifetime.ApplicationStopped);
 
 app.MapControllers();
 
 app.Run();
-Log.CloseAndFlush();
+
+try
+{
+
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Aplicação encerrada por falha");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
+
+
