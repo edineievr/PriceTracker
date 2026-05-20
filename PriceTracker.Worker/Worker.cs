@@ -15,7 +15,7 @@ namespace Pricetracker.Worker
         {
             _serviceScopeFactory = serviceScopeFactory;
             _logger = logger;
-        }        
+        }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -33,17 +33,7 @@ namespace Pricetracker.Worker
 
                 var comparisonService = scope.ServiceProvider.GetRequiredService<PriceComparisonService>();
 
-                List<Product> products;
-
-                try
-                {
-                    products = await database.GetProductsToTrack(stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Erro ao consultar produtos - {dateTime}", DateTime.Now.ToString("dd/MM/yyyy - HH:mm"));
-                    continue;
-                }
+                var products = await database.GetProductsToTrack(stoppingToken);
 
                 foreach (var product in products)
                 {
