@@ -26,8 +26,6 @@ Queria acompanhar preços de peças para montar um PC novo, mas os scrapers exis
 
 ✅ Notification Service via Telegram
 
-✅ Estratégia Mercado Livre implementada
-
 ✅ Estratégia Kabum implementada
 
 ✅ Estratégia Pichau implementada
